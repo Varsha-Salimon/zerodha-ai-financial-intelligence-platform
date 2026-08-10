@@ -1,26 +1,39 @@
 from fastapi import APIRouter
 
+from app.schemas.portfolio_schema import PortfolioItem
+from app.schemas.portfolio_summary_schema import PortfolioSummary
+from app.services.portfolio_service import (
+    get_portfolio_data,
+    get_portfolio_summary,
+)
+
+from app.services.analytics_service import (
+    calculate_allocation,
+)
+from app.schemas.portfolio_allocation_schema import (
+    PortfolioAllocation,
+)
+
 router = APIRouter()
 
-@router.get("/")
+
+@router.get("/", response_model=list[PortfolioItem])
 def get_portfolio():
-    return [
-        {
-            "stock": "TCS",
-            "quantity": 20,
-            "avg_price": 3400,
-            "current_price": 3620
-        },
-        {
-            "stock": "Infosys",
-            "quantity": 15,
-            "avg_price": 1520,
-            "current_price": 1610
-        },
-        {
-            "stock": "HDFC Bank",
-            "quantity": 30,
-            "avg_price": 1650,
-            "current_price": 1630
-        }
-    ]
+    return get_portfolio_data()
+
+
+@router.get("/summary", response_model=PortfolioSummary)
+def get_summary():
+    return get_portfolio_summary()
+
+
+@router.get(
+    "/allocation",
+    response_model=list[PortfolioAllocation],
+)
+def get_allocation():
+
+    portfolio = get_portfolio_data()
+
+    return calculate_allocation(portfolio)
+

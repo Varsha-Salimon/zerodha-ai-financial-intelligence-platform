@@ -14,44 +14,77 @@ export default function PortfolioTable({
   holdings,
 }: PortfolioTableProps) {
   return (
-    <div className="mt-10 rounded-xl bg-white shadow-md p-6">
-      <h2 className="mb-4 text-2xl font-bold">
-        Holdings
-      </h2>
-
+    <div className="overflow-hidden rounded-xl border border-slate-200">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="border-b">
-            <th className="py-3 text-left">Stock</th>
-            <th className="py-3 text-left">Quantity</th>
-            <th className="py-3 text-left">Average Price</th>
-            <th className="py-3 text-left">Current Price</th>
-            <th className="py-3 text-left">P&L</th>
+          <tr className="bg-slate-50">
+            <th className="px-5 py-4 text-left text-sm font-semibold text-slate-600">
+              Stock
+            </th>
+
+            <th className="px-5 py-4 text-left text-sm font-semibold text-slate-600">
+              Quantity
+            </th>
+
+            <th className="px-5 py-4 text-left text-sm font-semibold text-slate-600">
+              Average Price
+            </th>
+
+            <th className="px-5 py-4 text-left text-sm font-semibold text-slate-600">
+              Current Price
+            </th>
+
+            <th className="px-5 py-4 text-left text-sm font-semibold text-slate-600">
+              P&L
+            </th>
           </tr>
         </thead>
 
-        <tbody>
-          {holdings.map((holding) => (
-            <tr
-              key={holding.stock}
-              className="border-b hover:bg-gray-50"
-            >
-              <td className="py-4">{holding.stock}</td>
-              <td>{holding.quantity}</td>
-              <td>{holding.avgPrice}</td>
-              <td>{holding.currentPrice}</td>
+        <tbody className="bg-white">
+          {holdings.map((holding, index) => {
+            const pnlValue = Number(
+              holding.pnl.replace("₹", "")
+            );
 
-              <td
-                className={
-                  holding.pnl.startsWith("+")
-                    ? "font-semibold text-green-600"
-                    : "font-semibold text-red-600"
-                }
+            const isProfit = pnlValue >= 0;
+
+            return (
+              <tr
+                key={holding.stock}
+                className={`transition hover:bg-blue-50/50 ${
+                  index !== holdings.length - 1
+                    ? "border-b border-slate-100"
+                    : ""
+                }`}
               >
-                {holding.pnl}
-              </td>
-            </tr>
-          ))}
+                <td className="px-5 py-4 font-semibold text-slate-900">
+                  {holding.stock}
+                </td>
+
+                <td className="px-5 py-4 text-slate-600">
+                  {holding.quantity}
+                </td>
+
+                <td className="px-5 py-4 text-slate-600">
+                  {holding.avgPrice}
+                </td>
+
+                <td className="px-5 py-4 font-medium text-slate-800">
+                  {holding.currentPrice}
+                </td>
+
+                <td
+                  className={`py-4 font-semibold ${
+                    holding.pnl.startsWith("+")
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {holding.pnl}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

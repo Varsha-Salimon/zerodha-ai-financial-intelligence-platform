@@ -1,0 +1,20 @@
+[
+    {
+        "stock": "TCS",
+        "quantity": 20,
+        "avg_price": 3400,
+        "current_price": 3620
+    },
+    {
+        "stock": "Infosys",
+        "quantity": 15,
+        "avg_price": 1520,
+        "current_price": 1610
+    },
+    {
+        "stock": "HDFC Bank",
+        "quantity": 30,
+        "avg_price": 1650,
+        "current_price": 1630
+    }
+]
