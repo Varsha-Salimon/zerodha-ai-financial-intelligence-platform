@@ -1,44 +1,51 @@
 import InsightCard from "@/components/InsightCard";
 import PageHeader from "@/components/PageHeader";
+import { getInsights } from "@/lib/api";
 
-const insights = [
-  {
-    title: "High Banking Exposure",
-    description:
-      "Your portfolio has 42% allocation in banking stocks. Consider diversifying into other sectors.",
-    type: "warning" as const,
-  },
-  {
-    title: "Buy Opportunity",
-    description:
-      "TCS shows strong earnings momentum and positive analyst sentiment.",
-    type: "success" as const,
-  },
-  {
-    title: "Risk Alert",
-    description:
-      "Healthcare exposure is currently low. Diversification may reduce portfolio risk.",
-    type: "info" as const,
-  },
-];
+interface Insight {
+  type: string;
+  title: string;
+  message: string;
+  severity: string;
+  stock: string | null;
+}
 
-export default function InsightsPage() {
+export default async function InsightsPage() {
+  const insights: Insight[] = await getInsights();
+
   return (
     <div>
       <PageHeader
         title="AI Insights"
-        subtitle="AI-generated recommendations for your portfolio."
+        subtitle="AI-generated insights based on your portfolio."
       />
 
       <div className="space-y-6">
-        {insights.map((insight) => (
-          <InsightCard
-            key={insight.title}
-            title={insight.title}
-            description={insight.description}
-            type={insight.type}
-          />
-        ))}
+        {insights.map((insight, index) => {
+          let cardType:
+            | "warning"
+            | "success"
+            | "info";
+
+          if (insight.severity === "warning") {
+            cardType = "warning";
+          } else if (
+            insight.severity === "positive"
+          ) {
+            cardType = "success";
+          } else {
+            cardType = "info";
+          }
+
+          return (
+            <InsightCard
+              key={`${insight.type}-${insight.stock}-${index}`}
+              title={insight.title}
+              description={insight.message}
+              type={cardType}
+            />
+          );
+        })}
       </div>
     </div>
   );

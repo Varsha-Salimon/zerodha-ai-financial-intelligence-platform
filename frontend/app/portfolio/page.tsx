@@ -2,11 +2,15 @@ import KPICard from "@/components/KPICard";
 import PageHeader from "@/components/PageHeader";
 import PortfolioTable from "@/components/PortfolioTable";
 import PortfolioAllocation from "@/components/PortfolioAllocation";
+import PortfolioRisk from "@/components/PortfolioRisk";
+import PortfolioPerformance from "@/components/PortfolioPerformance";
 
 import {
   getPortfolio,
   getPortfolioSummary,
   getPortfolioAllocation,
+  getPortfolioRisk,
+  getPortfolioPerformance,
 } from "@/lib/api";
 
 interface PortfolioItem {
@@ -20,6 +24,8 @@ export default async function PortfolioPage() {
   const portfolioData = await getPortfolio();
   const portfolioSummary = await getPortfolioSummary();
   const portfolioAllocation = await getPortfolioAllocation();
+  const portfolioRisk = await getPortfolioRisk();
+  const portfolioPerformance = await getPortfolioPerformance();
 
   const holdings = portfolioData.map(
     (item: PortfolioItem) => {
@@ -97,7 +103,19 @@ export default async function PortfolioPage() {
           allocations={portfolioAllocation}
         />
       </div>
-
+      {/* Portfolio Risk */}
+      <div className="mt-8">
+        <PortfolioRisk risk={portfolioRisk} />
+      </div>
+      {/* Portfolio Performance */}
+      <div className="mt-8">
+        <PortfolioPerformance
+          performance={portfolioPerformance}
+          portfolioReturn={
+            portfolioSummary.profit_percentage
+          }
+        />
+      </div>
       {/* Holdings */}
       <div className="mt-8 rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
         <div className="mb-6">

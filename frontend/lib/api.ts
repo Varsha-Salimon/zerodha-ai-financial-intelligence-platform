@@ -37,3 +37,43 @@ export async function getPortfolioAllocation() {
 
   return response.json();
 }
+
+export async function getPortfolioRisk() {
+  const response = await fetch(
+    `${BASE_URL}/api/portfolio/risk`
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      "Failed to fetch portfolio risk"
+    );
+  }
+
+  return response.json();
+}
+
+export async function getPortfolioPerformance() {
+  const response = await fetch(
+    `${BASE_URL}/api/portfolio/performance`
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      "Failed to fetch portfolio performance"
+    );
+  }
+
+  return response.json();
+}
+
+export async function getInsights() {
+  const response = await fetch(
+    `${BASE_URL}/api/insights`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch AI insights");
+  }
+
+  return response.json();
+}
