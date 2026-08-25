@@ -111,6 +111,24 @@ export async function getRecommendations() {
   return response.json();
 }
 
+export async function generateRecommendations() {
+  const response = await fetch(
+    `${BASE_URL}/api/recommendations/generate`,
+    {
+      method: "POST",
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      "Failed to generate recommendations"
+    );
+  }
+
+  return response.json();
+}
+
 export async function getAIExecutions() {
   const response = await fetch(
     `${BASE_URL}/api/audit/executions`,
