@@ -59,7 +59,7 @@ export default function InsightsPage() {
     loadRecommendations();
   }, []);
 
-  const handleGenerate =
+  const handleRegenerate =
     async () => {
       try {
         setGenerating(true);
@@ -73,7 +73,7 @@ export default function InsightsPage() {
         setError(
           err instanceof Error
             ? err.message
-            : "Failed to generate recommendations"
+            : "Failed to regenerate recommendations"
         );
       } finally {
         setGenerating(false);
@@ -90,7 +90,7 @@ export default function InsightsPage() {
         subtitle="Explainable recommendations generated from your portfolio analytics."
       />
 
-      {/* AI Summary */}
+      {/* Portfolio Intelligence */}
 
       <section className="overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-indigo-50 shadow-sm">
 
@@ -109,28 +109,27 @@ export default function InsightsPage() {
               </h2>
 
               <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
-                AI-generated recommendations based
-                on the portfolio data and analytics
-                available to the application. Each
-                recommendation includes the reasoning
-                and supporting data behind it.
+                Review explainable recommendations
+                generated from the current portfolio
+                analytics. Each recommendation includes
+                the reasoning and supporting data behind it.
               </p>
 
             </div>
 
           </div>
 
-          {/* Generate button */}
+          {/* Regenerate button */}
 
           <button
             type="button"
-            onClick={handleGenerate}
+            onClick={handleRegenerate}
             disabled={generating}
             className="shrink-0 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {generating
-              ? "Generating..."
-              : "Generate Recommendations"}
+              ? "Regenerating..."
+              : "Regenerate Recommendations"}
           </button>
 
         </div>
@@ -159,7 +158,7 @@ export default function InsightsPage() {
 
             <p className="mt-1 text-sm text-slate-500">
               Review the areas identified by the
-              recommendation engine.
+              deterministic recommendation engine.
             </p>
 
           </div>
@@ -175,11 +174,15 @@ export default function InsightsPage() {
 
         </div>
 
+        {/* Loading */}
+
         {loading && (
           <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm">
             Loading recommendations...
           </div>
         )}
+
+        {/* Empty state */}
 
         {!loading &&
           recommendations.length === 0 && (
@@ -190,23 +193,25 @@ export default function InsightsPage() {
               </h3>
 
               <p className="mt-2 text-sm text-slate-500">
-                Generate recommendations from the
-                current portfolio analytics.
+                Run the recommendation engine against
+                the current portfolio analytics.
               </p>
 
               <button
                 type="button"
-                onClick={handleGenerate}
+                onClick={handleRegenerate}
                 disabled={generating}
                 className="mt-5 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
               >
                 {generating
-                  ? "Generating..."
-                  : "Generate Recommendations"}
+                  ? "Regenerating..."
+                  : "Regenerate Recommendations"}
               </button>
 
             </div>
           )}
+
+        {/* Recommendation cards */}
 
         {!loading &&
           recommendations.length > 0 && (
