@@ -210,3 +210,310 @@ def calculate_performance(portfolio):
 
     return performance
 
+def calculate_contribution(portfolio):
+    """
+    Calculate each holding's contribution to total portfolio P&L.
+    """
+
+    total_profit = 0
+
+    holding_profits = []
+
+    for stock in portfolio:
+        investment = (
+            stock["quantity"] *
+            stock["avg_price"]
+        )
+
+        current_value = (
+            stock["quantity"] *
+            stock["current_price"]
+        )
+
+        profit = current_value - investment
+
+        total_profit += profit
+
+        holding_profits.append({
+            "stock": stock["stock"],
+            "profit": profit,
+        })
+
+    contribution = []
+
+    for item in holding_profits:
+
+        if total_profit != 0:
+            contribution_percentage = (
+                item["profit"] /
+                total_profit
+            ) * 100
+        else:
+            contribution_percentage = 0
+
+        contribution.append({
+            "stock": item["stock"],
+            "profit": round(item["profit"], 2),
+            "contribution_percentage": round(
+                contribution_percentage,
+                2,
+            ),
+        })
+
+    return contribution
+
+
+def calculate_sector_exposure(portfolio):
+    """
+    Calculate portfolio exposure by sector.
+    """
+
+    sector_values = {}
+
+    total_value = 0
+
+    for stock in portfolio:
+
+        current_value = (
+            stock["quantity"] *
+            stock["current_price"]
+        )
+
+        sector = stock.get(
+            "sector",
+            "Unknown",
+        )
+
+        sector_values[sector] = (
+            sector_values.get(sector, 0)
+            + current_value
+        )
+
+        total_value += current_value
+
+    if total_value == 0:
+        return []
+
+    exposure = []
+
+    for sector, value in sector_values.items():
+
+        percentage = (
+            value /
+            total_value
+        ) * 100
+
+        exposure.append({
+            "sector": sector,
+            "current_value": round(
+                value,
+                2,
+            ),
+            "exposure_percentage": round(
+                percentage,
+                2,
+            ),
+        })
+
+    return exposure
+
+
+def calculate_volatility(portfolio, market_data):
+    """
+    Return volatility markers for portfolio holdings.
+    """
+
+    market_lookup = {
+        item["Stock"]: item
+        for item in market_data
+    }
+
+    volatility = []
+
+    for stock in portfolio:
+
+        market = market_lookup.get(
+            stock["stock"]
+        )
+
+        if not market:
+            continue
+
+        volatility.append({
+            "stock": stock["stock"],
+            "volatility": float(
+                market.get(
+                    "Volatility",
+                    0,
+                )
+            ),
+            "change_percentage": float(
+                market.get(
+                    "ChangePercent",
+                    0,
+                )
+            ),
+        })
+
+    return volatility
+
+
+def calculate_drawdown(portfolio, market_data):
+    """
+    Return drawdown markers for portfolio holdings.
+    """
+
+    market_lookup = {
+        item["Stock"]: item
+        for item in market_data
+    }
+
+    drawdown = []
+
+    for stock in portfolio:
+
+        market = market_lookup.get(
+            stock["stock"]
+        )
+
+        if not market:
+            continue
+
+        drawdown.append({
+            "stock": stock["stock"],
+            "drawdown_percentage": float(
+                market.get(
+                    "Drawdown",
+                    0,
+                )
+            ),
+        })
+
+    return drawdown
+
+
+def calculate_benchmark_comparison(
+    portfolio,
+    market_data,
+):
+    """
+    Compare portfolio movement with benchmark movement.
+    """
+
+    if not portfolio:
+        return {
+            "portfolio_change_percentage": 0,
+            "benchmark_change_percentage": 0,
+            "relative_performance": 0,
+        }
+
+    total_previous_value = 0
+    total_current_value = 0
+
+    market_lookup = {
+        item["Stock"]: item
+        for item in market_data
+    }
+
+    benchmark_change = 0
+
+    for stock in portfolio:
+
+        market = market_lookup.get(
+            stock["stock"]
+        )
+
+        if not market:
+            continue
+
+        current_value = (
+            stock["quantity"] *
+            stock["current_price"]
+        )
+
+        previous_price = float(
+            market.get(
+                "PreviousPrice",
+                stock["current_price"],
+            )
+        )
+
+        previous_value = (
+            stock["quantity"] *
+            previous_price
+        )
+
+        total_current_value += current_value
+        total_previous_value += previous_value
+
+        benchmark_change = float(
+            market.get(
+                "BenchmarkChangePercent",
+                0,
+            )
+        )
+
+    if total_previous_value > 0:
+
+        portfolio_change = (
+            (
+                total_current_value -
+                total_previous_value
+            )
+            / total_previous_value
+        ) * 100
+
+    else:
+        portfolio_change = 0
+
+    relative_performance = (
+        portfolio_change -
+        benchmark_change
+    )
+
+    return {
+        "portfolio_change_percentage": round(
+            portfolio_change,
+            2,
+        ),
+        "benchmark_change_percentage": round(
+            benchmark_change,
+            2,
+        ),
+        "relative_performance": round(
+            relative_performance,
+            2,
+        ),
+    }
+
+
+def calculate_data_freshness(market_data):
+    """
+    Return the latest timestamp available in market data.
+    """
+
+    if not market_data:
+        return {
+            "status": "UNAVAILABLE",
+            "latest_timestamp": None,
+        }
+
+    timestamps = [
+        item.get("Timestamp")
+        for item in market_data
+        if item.get("Timestamp")
+    ]
+
+    if not timestamps:
+        return {
+            "status": "UNKNOWN",
+            "latest_timestamp": None,
+        }
+
+    latest_timestamp = max(timestamps)
+
+    return {
+        "status": "AVAILABLE",
+        "latest_timestamp": latest_timestamp,
+        "source": "Sample market data",
+    }

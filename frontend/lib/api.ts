@@ -68,11 +68,61 @@ export async function getPortfolioPerformance() {
 
 export async function getInsights() {
   const response = await fetch(
-    `${BASE_URL}/api/insights`
+    `${BASE_URL}/api/insights/`,
+    {
+      cache: "no-store",
+    }
   );
 
   if (!response.ok) {
     throw new Error("Failed to fetch AI insights");
+  }
+
+  return response.json();
+}
+
+export async function getAIAnalysis() {
+  const response = await fetch(
+    `${BASE_URL}/api/insights/ai`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch AI analysis");
+  }
+
+  return response.json();
+}
+
+export async function getRecommendations() {
+  const response = await fetch(
+    `${BASE_URL}/api/recommendations`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch recommendations");
+  }
+
+  return response.json();
+}
+
+export async function getAIExecutions() {
+  const response = await fetch(
+    `${BASE_URL}/api/audit/executions`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      "Failed to fetch AI execution records"
+    );
   }
 
   return response.json();

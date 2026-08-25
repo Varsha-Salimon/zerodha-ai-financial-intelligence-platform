@@ -1,5 +1,4 @@
-Stock,CurrentPrice,ChangePercent
-Reliance,1525,1.67
-Infosys,1588,-0.75
-HDFC Bank,1710,0.59
-TCS,3845,1.18
+Stock,CurrentPrice,PreviousPrice,ChangePercent,Volume,Sector,Volatility,Drawdown,BenchmarkChangePercent,Timestamp
+TCS,3620,3575,1.26,1250000,IT,0.18,-3.20,0.82,2026-08-12T10:00:00
+Infosys,1610,1590,1.26,980000,IT,0.21,-4.50,0.82,2026-08-12T10:00:00
+HDFC Bank,1630,1660,-1.81,1500000,Banking,0.16,-5.80,0.82,2026-08-12T10:00:00

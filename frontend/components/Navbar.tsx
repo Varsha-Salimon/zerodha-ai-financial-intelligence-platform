@@ -1,10 +1,28 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
+const pageTitles: Record<string, string> = {
+  "/": "Dashboard",
+  "/dashboard": "Dashboard",
+  "/portfolio": "Portfolio",
+  "/insights": "AI Insights",
+  "/operations": "Operations",
+  "/compliance": "Compliance",
+  "/settings": "Settings",
+};
+
 export default function Navbar() {
+  const pathname = usePathname();
+
+  const pageTitle = pageTitles[pathname] ?? "Dashboard";
+
   return (
     <header className="flex h-16 items-center justify-between border-b border-blue-100 bg-white px-8 shadow-sm">
       {/* Page Title */}
       <div>
         <h2 className="text-xl font-bold text-slate-900">
-          Dashboard
+          {pageTitle}
         </h2>
       </div>
 
