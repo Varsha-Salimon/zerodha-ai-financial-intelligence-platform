@@ -127,3 +127,20 @@ export async function getAIExecutions() {
 
   return response.json();
 }
+
+export async function getMCPExecutions() {
+  const response = await fetch(
+    `${BASE_URL}/api/audit/mcp-executions`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      "Failed to fetch MCP executions"
+    );
+  }
+
+  return response.json();
+}
