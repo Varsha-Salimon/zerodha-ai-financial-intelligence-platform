@@ -99,13 +99,11 @@ def extract_mcp_result(result):
 # Get portfolio context through MCP
 # ============================================================
 
-async def get_portfolio_context():
+async def get_portfolio_context(execution_id):
     """
     Connect to the MCP server and retrieve
     portfolio information through MCP tools.
     """
-
-    execution_id = str(uuid.uuid4())
     
     async with stdio_client(
         server_params
@@ -436,7 +434,7 @@ async def generate_portfolio_ai_analysis():
         # Retrieve MCP context
         # ----------------------------------------------------
 
-        context = await get_portfolio_context()
+        context = await get_portfolio_context(execution_id)
 
         # ----------------------------------------------------
         # Generate Gemini analysis
