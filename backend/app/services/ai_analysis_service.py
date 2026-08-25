@@ -6,6 +6,9 @@ from pathlib import Path
 
 from app.schemas.ai_analysis_schema import AIAnalysis
 from app.services.validation_service import validate_ai_analysis
+from app.services.mcp_telemetry_service import (
+    execute_mcp_tool,
+)
 from app.database.database import SessionLocal
 from app.database.models import AIExecutionRecord
 from dotenv import load_dotenv
@@ -102,6 +105,8 @@ async def get_portfolio_context():
     portfolio information through MCP tools.
     """
 
+    execution_id = str(uuid.uuid4())
+    
     async with stdio_client(
         server_params
     ) as (read, write):
@@ -146,21 +151,29 @@ async def get_portfolio_context():
             # Call MCP tools
             # ------------------------------------------------
 
-            portfolio_result = await session.call_tool(
-                "get_portfolio"
+            portfolio_result = await execute_mcp_tool(
+                session,
+                "get_portfolio",
+                execution_id,
             )
 
-            analytics_result = await session.call_tool(
-                "get_portfolio_analytics"
-            )
-            
-            market_result = await session.call_tool(
-                "get_market_data"
+            analytics_result = await execute_mcp_tool(
+                session,
+                "get_portfolio_analytics",
+                execution_id,
             )
 
-            news_result = await session.call_tool(
-                "get_portfolio_news"
+            market_result = await execute_mcp_tool(
+                session,
+                "get_market_data",
+                execution_id,
             )
+
+            news_result = await execute_mcp_tool(
+                session,
+                "get_portfolio_news",
+                execution_id,
+            )   
 
             # ------------------------------------------------
             # Build structured context
