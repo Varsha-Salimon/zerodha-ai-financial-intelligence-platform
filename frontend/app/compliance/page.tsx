@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAIExecutions } from "@/lib/api";
+
+import {
+  getAIExecutions,
+  getMCPExecutions,
+} from "@/lib/api";
 
 interface AIExecution {
   execution_id: string;
@@ -19,6 +23,37 @@ interface AIExecution {
   };
 }
 
+interface MCPExecution {
+  execution_id: string;
+  tool_name: string;
+  status: string;
+  duration_ms: number;
+  error_message?: string | null;
+  input_source: string;
+}
+
+function StatusBadge({
+  status,
+}: {
+  status: string;
+}) {
+  const passed =
+    status === "SUCCESS" ||
+    status === "PASSED";
+
+  return (
+    <span
+      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+        passed
+          ? "bg-green-50 text-green-700"
+          : "bg-red-50 text-red-700"
+      }`}
+    >
+      {status}
+    </span>
+  );
+}
+
 function ValidationCard({
   label,
   passed,
@@ -27,10 +62,22 @@ function ValidationCard({
   passed: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4">
-      <span className="text-sm font-medium text-slate-700">
-        {label}
-      </span>
+    <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
+            passed
+              ? "bg-green-50 text-green-600"
+              : "bg-red-50 text-red-600"
+          }`}
+        >
+          {passed ? "✓" : "!"}
+        </div>
+
+        <span className="text-sm font-medium text-slate-700">
+          {label}
+        </span>
+      </div>
 
       <span
         className={`rounded-full px-3 py-1 text-xs font-semibold ${
@@ -49,18 +96,35 @@ export default function CompliancePage() {
   const [execution, setExecution] =
     useState<AIExecution | null>(null);
 
-  const [loading, setLoading] = useState(true);
+  const [mcpExecutions, setMCPExecutions] =
+    useState<MCPExecution[]>([]);
 
-  const [error, setError] = useState("");
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
 
   useEffect(() => {
-    async function loadExecution() {
+    async function loadComplianceData() {
       try {
-        const data = await getAIExecutions();
+        setLoading(true);
+        setError("");
 
-        if (data.length > 0) {
-          setExecution(data[0]);
+        const [
+          aiData,
+          mcpData,
+        ] = await Promise.all([
+          getAIExecutions(),
+          getMCPExecutions(),
+        ]);
+
+        if (aiData.length > 0) {
+          setExecution(aiData[0]);
         }
+
+        setMCPExecutions(mcpData);
+
       } catch (err) {
         setError(
           err instanceof Error
@@ -72,13 +136,13 @@ export default function CompliancePage() {
       }
     }
 
-    loadExecution();
+    loadComplianceData();
   }, []);
 
   if (loading) {
     return (
       <main className="min-h-screen bg-slate-50 p-8">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-7xl">
           <p className="text-sm text-slate-500">
             Loading compliance data...
           </p>
@@ -90,10 +154,10 @@ export default function CompliancePage() {
   if (error) {
     return (
       <main className="min-h-screen bg-slate-50 p-8">
-        <div className="mx-auto max-w-5xl">
-          <p className="text-sm text-red-600">
+        <div className="mx-auto max-w-7xl">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
-          </p>
+          </div>
         </div>
       </main>
     );
@@ -102,14 +166,34 @@ export default function CompliancePage() {
   if (!execution) {
     return (
       <main className="min-h-screen bg-slate-50 p-8">
-        <div className="mx-auto max-w-5xl">
-          <h1 className="text-3xl font-bold text-slate-900">
-            AI Governance & Compliance
-          </h1>
+        <div className="mx-auto max-w-7xl">
 
-          <p className="mt-4 text-sm text-slate-500">
-            No AI execution records are available.
-          </p>
+          <div className="mb-8">
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
+              Compliance
+            </p>
+
+            <h1 className="mt-1 text-3xl font-bold text-slate-900">
+              AI Governance & Compliance
+            </h1>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Validation, governance, and audit status
+              for AI-generated portfolio analysis.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+            <h2 className="font-semibold text-slate-900">
+              No AI execution records available
+            </h2>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Run an AI portfolio analysis to create
+              governance and audit records.
+            </p>
+          </div>
+
         </div>
       </main>
     );
@@ -118,13 +202,15 @@ export default function CompliancePage() {
   const validation =
     execution.validation_details;
 
-  const issues = validation?.issues ?? [];
+  const issues =
+    validation?.issues ?? [];
 
   return (
     <main className="min-h-screen bg-slate-50 p-8">
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-7xl">
 
         {/* Header */}
+
         <div className="mb-8">
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
             Compliance
@@ -135,15 +221,16 @@ export default function CompliancePage() {
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
-            Validation and governance status for AI-generated
-            portfolio analysis.
+            Validation, governance, and audit status
+            for AI-generated portfolio analysis.
           </p>
         </div>
 
-        {/* Overall status */}
-        <div className="rounded-2xl border border-green-100 bg-white p-6 shadow-sm">
+        {/* Overall validation */}
 
-          <div className="flex items-center justify-between">
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
 
             <div>
               <p className="text-sm text-slate-500">
@@ -152,13 +239,19 @@ export default function CompliancePage() {
 
               <h2 className="mt-1 text-xl font-semibold text-slate-900">
                 {validation?.valid
-                  ? "Validation Passed"
-                  : "Validation Failed"}
+                  ? "AI analysis validation passed"
+                  : "AI analysis validation failed"}
               </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                The generated analysis was checked for
+                schema validity, grounding, and policy
+                compliance.
+              </p>
             </div>
 
             <span
-              className={`rounded-full px-4 py-2 text-sm font-semibold ${
+              className={`w-fit rounded-full px-4 py-2 text-sm font-semibold ${
                 validation?.valid
                   ? "bg-green-50 text-green-700"
                   : "bg-red-50 text-red-700"
@@ -170,10 +263,12 @@ export default function CompliancePage() {
             </span>
 
           </div>
-        </div>
+
+        </section>
 
         {/* Validation checks */}
-        <div className="mt-6">
+
+        <section className="mt-6">
 
           <h2 className="mb-3 text-lg font-semibold text-slate-900">
             Validation Checks
@@ -203,42 +298,33 @@ export default function CompliancePage() {
             />
 
           </div>
-        </div>
 
-        {/* Issues */}
-        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        </section>
 
-          <h2 className="text-lg font-semibold text-slate-900">
-            Validation Issues
-          </h2>
+        {/* AI execution details */}
 
-          {issues.length === 0 ? (
-            <p className="mt-3 text-sm text-green-600">
-              No validation issues detected.
-            </p>
-          ) : (
-            <ul className="mt-3 space-y-2">
-              {issues.map((issue, index) => (
-                <li
-                  key={index}
-                  className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
-                >
-                  {issue}
-                </li>
-              ))}
-            </ul>
-          )}
+        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
-        </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-        {/* Execution details */}
-        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Latest AI Execution
+              </h2>
 
-          <h2 className="text-lg font-semibold text-slate-900">
-            Execution Details
-          </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Audit information for the latest AI
+                portfolio analysis workflow.
+              </p>
+            </div>
 
-          <div className="mt-5 grid gap-5 md:grid-cols-2">
+            <StatusBadge
+              status={execution.status}
+            />
+
+          </div>
+
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
 
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-400">
@@ -272,6 +358,18 @@ export default function CompliancePage() {
 
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-400">
+                Validation Status
+              </p>
+
+              <div className="mt-1">
+                <StatusBadge
+                  status={execution.validation_status}
+                />
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <p className="text-xs uppercase tracking-wide text-slate-400">
                 Input Source
               </p>
 
@@ -281,6 +379,203 @@ export default function CompliancePage() {
             </div>
 
           </div>
+
+        </section>
+
+        {/* Validation issues */}
+
+        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+
+          <h2 className="text-lg font-semibold text-slate-900">
+            Validation Issues
+          </h2>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Issues detected during AI output validation.
+          </p>
+
+          {issues.length === 0 ? (
+            <div className="mt-4 rounded-xl border border-green-100 bg-green-50 p-4">
+              <p className="text-sm font-medium text-green-700">
+                ✓ No validation issues detected.
+              </p>
+
+              <p className="mt-1 text-xs text-green-600">
+                The latest AI output passed all configured
+                validation checks.
+              </p>
+            </div>
+          ) : (
+            <ul className="mt-4 space-y-2">
+              {issues.map((issue, index) => (
+                <li
+                  key={index}
+                  className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
+                >
+                  {issue}
+                </li>
+              ))}
+            </ul>
+          )}
+
+        </section>
+
+        {/* MCP audit */}
+
+        <section className="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+          <div className="border-b border-slate-100 p-6">
+
+            <h2 className="text-lg font-semibold text-slate-900">
+              MCP Execution Audit
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Read-only MCP tool executions used during
+              the AI analysis workflow.
+            </p>
+
+          </div>
+
+          {mcpExecutions.length === 0 ? (
+            <div className="p-6 text-sm text-slate-500">
+              No MCP execution records available.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+
+              <table className="w-full text-left text-sm">
+
+                <thead className="border-b border-slate-100 bg-slate-50">
+
+                  <tr>
+
+                    <th className="px-6 py-4 font-semibold text-slate-600">
+                      MCP Tool
+                    </th>
+
+                    <th className="px-6 py-4 font-semibold text-slate-600">
+                      Status
+                    </th>
+
+                    <th className="px-6 py-4 font-semibold text-slate-600">
+                      Duration
+                    </th>
+
+                    <th className="px-6 py-4 font-semibold text-slate-600">
+                      Source
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  {mcpExecutions.map(
+                    (record, index) => (
+                      <tr
+                        key={`${record.execution_id}-${record.tool_name}-${index}`}
+                        className="border-b border-slate-100 last:border-0"
+                      >
+
+                        <td className="px-6 py-4 font-medium text-slate-900">
+                          {record.tool_name}
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <StatusBadge
+                            status={record.status}
+                          />
+                        </td>
+
+                        <td className="px-6 py-4 text-slate-600">
+                          {record.duration_ms.toFixed(2)} ms
+                        </td>
+
+                        <td className="px-6 py-4 text-slate-600">
+                          {record.input_source}
+                        </td>
+
+                      </tr>
+                    )
+                  )}
+
+                </tbody>
+
+              </table>
+
+            </div>
+          )}
+
+        </section>
+
+        {/* Governance explanation */}
+
+        <section className="mt-8 rounded-2xl border border-blue-100 bg-blue-50 p-6">
+
+          <h2 className="text-lg font-semibold text-slate-900">
+            Governance Controls
+          </h2>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+
+            <div className="rounded-xl bg-white p-4">
+
+              <p className="font-semibold text-slate-900">
+                Grounded Analysis
+              </p>
+
+              <p className="mt-1 text-sm leading-5 text-slate-500">
+                AI analysis is constrained to portfolio,
+                analytics, market, and approved news
+                context retrieved through MCP.
+              </p>
+
+            </div>
+
+            <div className="rounded-xl bg-white p-4">
+
+              <p className="font-semibold text-slate-900">
+                Structured Output
+              </p>
+
+              <p className="mt-1 text-sm leading-5 text-slate-500">
+                AI responses are validated against the
+                application&apos;s defined response schema.
+              </p>
+
+            </div>
+
+            <div className="rounded-xl bg-white p-4">
+
+              <p className="font-semibold text-slate-900">
+                Auditability
+              </p>
+
+              <p className="mt-1 text-sm leading-5 text-slate-500">
+                AI and MCP executions are recorded with
+                status, validation results, and execution
+                metadata.
+              </p>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* Disclaimer */}
+
+        <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+
+          <p className="text-xs leading-5 text-slate-500">
+            Governance information is provided for
+            monitoring and audit purposes. AI-generated
+            analysis is informational only and does not
+            constitute financial, investment, or trading
+            advice.
+          </p>
 
         </div>
 

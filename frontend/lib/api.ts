@@ -143,7 +143,9 @@ export async function getAIExecutions() {
     );
   }
 
-  return response.json();
+  const data = await response.json();
+
+  return data.value ?? data;
 }
 
 export async function getMCPExecutions() {
@@ -160,5 +162,7 @@ export async function getMCPExecutions() {
     );
   }
 
-  return response.json();
+  const data = await response.json();
+
+  return data.value ?? data;
 }

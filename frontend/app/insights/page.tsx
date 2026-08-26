@@ -34,31 +34,49 @@ export default function InsightsPage() {
   const [error, setError] =
     useState("");
 
-  const loadRecommendations =
-    async () => {
+  /*
+   * Load existing recommendations when
+   * the page is opened.
+   */
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchRecommendations() {
       try {
-        setLoading(true);
         setError("");
 
         const data =
           await getRecommendations();
 
-        setRecommendations(data);
+        if (!cancelled) {
+          setRecommendations(data);
+        }
       } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load recommendations"
-        );
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to load recommendations"
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-    };
+    }
 
-  useEffect(() => {
-    loadRecommendations();
+    fetchRecommendations();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
+  /*
+   * Regenerate recommendations when
+   * the user explicitly clicks the button.
+   */
   const handleRegenerate =
     async () => {
       try {
