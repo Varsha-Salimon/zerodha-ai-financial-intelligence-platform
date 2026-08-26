@@ -11,6 +11,7 @@ from app.services.mcp_telemetry_service import (
 )
 from app.database.database import SessionLocal
 from app.database.models import AIExecutionRecord
+
 from dotenv import load_dotenv
 from google import genai
 
@@ -21,9 +22,6 @@ from mcp.client.stdio import stdio_client
 # ============================================================
 # Project paths
 # ============================================================
-
-# ai_analysis_service.py
-# backend/app/services/ai_analysis_service.py
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -46,6 +44,7 @@ GEMINI_MODEL = os.getenv(
     "GEMINI_MODEL",
     "gemini-3.1-flash-lite",
 )
+
 
 if not GEMINI_API_KEY:
     raise ValueError(
@@ -104,7 +103,7 @@ async def get_portfolio_context(execution_id):
     Connect to the MCP server and retrieve
     portfolio information through MCP tools.
     """
-    
+
     async with stdio_client(
         server_params
     ) as (read, write):
@@ -171,7 +170,7 @@ async def get_portfolio_context(execution_id):
                 session,
                 "get_portfolio_news",
                 execution_id,
-            )   
+            )
 
             # ------------------------------------------------
             # Build structured context
@@ -185,7 +184,7 @@ async def get_portfolio_context(execution_id):
                 "analytics": extract_mcp_result(
                     analytics_result
                 ),
-                
+
                 "market": extract_mcp_result(
                     market_result
                 ),
@@ -292,8 +291,53 @@ IMPORTANT RULES:
 25. If no relevant news exists, return an empty
     market_context list.
 
-26. Do not use special Unicode punctuation or symbols.
-    Use standard ASCII punctuation only.
+26. Do not use special Unicode punctuation or symbols
+    inside the JSON content. Use standard ASCII
+    punctuation except for the Indian Rupee symbol
+    when formatting monetary values.
+
+27. Monetary values in explanatory text must be
+    professionally formatted.
+
+28. When mentioning Indian currency, use the
+    Indian Rupee symbol and Indian number grouping.
+
+    Examples:
+    140300 -> ₹1,40,300
+    145450 -> ₹1,45,450
+    5150 -> ₹5,150
+    4400 -> ₹4,400
+    -600 -> -₹600
+
+29. Do NOT write monetary values like:
+    140300.0
+    145450.0
+    5150.0
+    4400.0
+    -600.0
+
+30. Do not unnecessarily show decimal places for
+    whole-rupee amounts.
+
+31. Percentages in explanatory text must use the
+    % symbol.
+
+    Examples:
+    3.67%
+    49.78%
+    66.38%
+
+32. Do NOT write:
+    3.67 percent
+    49.78 percent
+    66.38 percent
+
+33. Numeric fields required by the JSON schema must
+    remain numeric values, not formatted strings.
+
+34. The formatting rules apply only to natural-language
+    explanatory fields such as portfolio_overview,
+    observations, summaries, and considerations.
 
 Portfolio, deterministic analytics, market data,
 and portfolio-relevant news retrieved through MCP:
@@ -303,7 +347,7 @@ and portfolio-relevant news retrieved through MCP:
 Return exactly this JSON structure:
 
 {{
-    "portfolio_overview": "A concise factual overview of the portfolio.",
+    "portfolio_overview": "A concise factual overview of the portfolio using professional Indian currency and percentage formatting.",
 
     "key_observations": [
         "Observation 1",
@@ -329,7 +373,7 @@ Return exactly this JSON structure:
         "Consideration 1",
         "Consideration 2"
     ],
-    
+
     "market_context": [
         {{
             "stock": "TCS",
@@ -346,7 +390,7 @@ Additional requirements:
 - The number of performance_highlights entries
   must match the number of holdings in the
   supplied performance data.
-  
+
 - The number of market_context entries must equal
   the number of portfolio-relevant news records
   supplied by MCP.
@@ -365,6 +409,9 @@ Additional requirements:
 
 - Keep the language concise, practical, and
   understandable.
+
+- Keep monetary values and percentages in
+  explanatory text professionally formatted.
 """
 
     response = client.models.generate_content(
@@ -375,7 +422,9 @@ Additional requirements:
     response_text = response.text.strip()
 
     try:
-        parsed_response = json.loads(response_text)
+        parsed_response = json.loads(
+            response_text
+        )
 
         validated_analysis = AIAnalysis.model_validate(
             parsed_response
@@ -396,7 +445,7 @@ Additional requirements:
             "error": "Gemini response failed schema validation.",
             "details": str(exc),
             "raw_response": response_text,
-        }                       
+        }
 
 
 # ============================================================
@@ -414,6 +463,7 @@ async def generate_portfolio_ai_analysis():
     db = SessionLocal()
 
     try:
+
         # ----------------------------------------------------
         # Create initial execution record
         # ----------------------------------------------------
@@ -434,7 +484,9 @@ async def generate_portfolio_ai_analysis():
         # Retrieve MCP context
         # ----------------------------------------------------
 
-        context = await get_portfolio_context(execution_id)
+        context = await get_portfolio_context(
+            execution_id
+        )
 
         # ----------------------------------------------------
         # Generate Gemini analysis
@@ -530,6 +582,7 @@ async def generate_portfolio_ai_analysis():
 
         # Try to persist failure state
         try:
+
             execution_record.status = "FAILED"
             execution_record.validation_status = "FAILED"
 

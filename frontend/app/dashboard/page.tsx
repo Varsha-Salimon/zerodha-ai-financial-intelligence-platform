@@ -38,7 +38,10 @@ interface PerformanceItem {
 
 interface PortfolioRisk {
   risk_level: string;
-  summary?: string;
+  largest_holding: string;
+  largest_allocation: number;
+  number_of_holdings: number;
+  message: string;
 }
 
 interface AIAnalysis {
@@ -70,6 +73,66 @@ function formatCurrency(value: number) {
   })}`;
 }
 
+/*
+ * Format monetary and percentage values appearing inside
+ * AI-generated explanatory text.
+ *
+ * The underlying AI data is not changed.
+ * This only improves presentation in the dashboard.
+ */
+function formatAIText(
+  text: string,
+  summary: PortfolioSummary
+) {
+  let formatted = text;
+
+  const monetaryValues = [
+    summary.total_investment,
+    summary.current_value,
+    summary.profit,
+  ];
+
+  monetaryValues.forEach((value) => {
+    const rawInteger = String(value);
+    const rawDecimal = `${value.toFixed(1)}`;
+
+    const formattedValue = `₹${value.toLocaleString(
+      "en-IN",
+      {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }
+    )}`;
+
+    formatted = formatted.split(rawDecimal).join(
+      formattedValue
+    );
+
+    formatted = formatted.split(rawInteger).join(
+      formattedValue
+    );
+  });
+
+  /*
+   * Convert:
+   * 3.67 percent -> 3.67%
+   */
+  formatted = formatted.replace(
+    /(\d+(?:\.\d+)?)\s+percent\b/gi,
+    "$1%"
+  );
+
+  /*
+   * Remove unnecessary .0 from standalone decimal numbers.
+   */
+  formatted = formatted.replace(
+    /(\d+)\.0\b/g,
+    "$1"
+  );
+
+  return formatted;
+}
+
 export default function DashboardPage() {
   const [summary, setSummary] =
     useState<PortfolioSummary | null>(null);
@@ -99,10 +162,7 @@ export default function DashboardPage() {
     useState("");
 
   /*
-   * Load lightweight portfolio data.
-   *
-   * These APIs are very fast and should not wait
-   * for the AI workflow.
+   * Load portfolio data independently from AI analysis.
    */
   useEffect(() => {
     async function loadPortfolioData() {
@@ -142,9 +202,6 @@ export default function DashboardPage() {
 
   /*
    * Load AI analysis independently.
-   *
-   * The AI workflow can take several seconds, so
-   * it should not block the main dashboard.
    */
   useEffect(() => {
     async function loadAIAnalysis() {
@@ -172,7 +229,6 @@ export default function DashboardPage() {
   /*
    * Initial portfolio loading state.
    */
-
   if (loading) {
     return (
       <main>
@@ -193,7 +249,6 @@ export default function DashboardPage() {
   /*
    * Portfolio API error.
    */
-
   if (error) {
     return (
       <main>
@@ -214,7 +269,6 @@ export default function DashboardPage() {
   /*
    * No portfolio data.
    */
-
   if (!summary) {
     return (
       <main>
@@ -231,6 +285,71 @@ export default function DashboardPage() {
       </main>
     );
   }
+
+  /*
+   * Find largest allocation dynamically.
+   */
+  const largestAllocation =
+    allocation.length > 0
+      ? allocation.reduce((largest, current) =>
+          current.allocation_percentage >
+          largest.allocation_percentage
+            ? current
+            : largest
+        )
+      : null;
+
+  /*
+   * Use the exact message returned by the backend.
+   *
+   * Example:
+   * "TCS represents 49.78% of the portfolio.
+   *  The portfolio has moderate concentration risk."
+   */
+  const riskMessage =
+    risk?.message ??
+    (largestAllocation
+      ? `${largestAllocation.stock} represents ${largestAllocation.allocation_percentage.toFixed(
+          2
+        )}% of the portfolio. The portfolio has moderate concentration risk.`
+      : "Portfolio concentration risk is being monitored.");
+
+  /*
+   * Dynamic allocation chart.
+   */
+  const allocationColors = [
+    "#2563eb",
+    "#6366f1",
+    "#94a3b8",
+    "#22c55e",
+    "#f59e0b",
+    "#ef4444",
+  ];
+
+  let cumulativePercentage = 0;
+
+  const allocationStops = allocation.map(
+    (item, index) => {
+      const start = cumulativePercentage;
+
+      cumulativePercentage +=
+        item.allocation_percentage;
+
+      const end = cumulativePercentage;
+
+      const color =
+        allocationColors[
+          index % allocationColors.length
+        ];
+
+      return `${color} ${start}% ${end}%`;
+    }
+  );
+
+  const allocationGradient =
+    allocationStops.length > 0
+      ? `conic-gradient(${allocationStops.join(", ")})`
+      : "conic-gradient(#e2e8f0 0% 100%)";
 
   const kpiData = [
     {
@@ -289,7 +408,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Charts */}
+      {/* Allocation and Performance */}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
@@ -318,14 +437,14 @@ export default function DashboardPage() {
               <div
                 className="h-full w-full rounded-full"
                 style={{
-                  background:
-                    "conic-gradient(#2563eb 0% 49.78%, #6366f1 49.78% 66.38%, #94a3b8 66.38% 100%)",
+                  background: allocationGradient,
                 }}
               />
 
               <div className="absolute inset-10 flex items-center justify-center rounded-full bg-white">
 
                 <div className="text-center">
+
                   <p className="text-xs text-slate-400">
                     Holdings
                   </p>
@@ -333,6 +452,7 @@ export default function DashboardPage() {
                   <p className="text-2xl font-bold text-slate-900">
                     {allocation.length}
                   </p>
+
                 </div>
 
               </div>
@@ -352,13 +472,14 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2">
 
                   <span
-                    className={`h-2.5 w-2.5 rounded-full ${
-                      index === 0
-                        ? "bg-blue-600"
-                        : index === 1
-                        ? "bg-indigo-500"
-                        : "bg-slate-400"
-                    }`}
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{
+                      backgroundColor:
+                        allocationColors[
+                          index %
+                            allocationColors.length
+                        ],
+                    }}
                   />
 
                   <span className="text-sm font-medium text-slate-700">
@@ -399,10 +520,13 @@ export default function DashboardPage() {
           <div className="mt-8 space-y-6">
 
             {performance.map((item) => {
+
               const maxReturn = 7;
 
               const width = Math.min(
-                (Math.abs(item.return_percentage) /
+                (Math.abs(
+                  item.return_percentage
+                ) /
                   maxReturn) *
                   100,
                 100
@@ -554,7 +678,10 @@ export default function DashboardPage() {
           aiAnalysis && (
             <>
               <p className="mt-6 max-w-4xl text-sm leading-6 text-slate-600">
-                {aiAnalysis.portfolio_overview}
+                {formatAIText(
+                  aiAnalysis.portfolio_overview,
+                  summary
+                )}
               </p>
 
               <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -579,7 +706,10 @@ export default function DashboardPage() {
                       </div>
 
                       <p className="text-sm leading-5 text-slate-600">
-                        {observation}
+                        {formatAIText(
+                          observation,
+                          summary
+                        )}
                       </p>
 
                     </div>
@@ -611,7 +741,10 @@ export default function DashboardPage() {
                 </div>
 
                 <p className="mt-3 text-sm leading-6 text-slate-600">
-                  {aiAnalysis.risk_analysis.summary}
+                  {formatAIText(
+                    aiAnalysis.risk_analysis.summary,
+                    summary
+                  )}
                 </p>
 
               </div>
@@ -649,8 +782,7 @@ export default function DashboardPage() {
           </p>
 
           <p className="mt-3 text-sm leading-5 text-slate-500">
-            {risk?.summary ??
-              "Risk analysis is currently unavailable."}
+            {riskMessage}
           </p>
 
           <a
