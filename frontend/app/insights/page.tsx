@@ -104,7 +104,7 @@ export default function InsightsPage() {
       {/* Header */}
 
       <PageHeader
-        title="AI Insights"
+        title="Portfolio Intelligence"
         subtitle="Explainable recommendations generated from your portfolio analytics."
       />
 

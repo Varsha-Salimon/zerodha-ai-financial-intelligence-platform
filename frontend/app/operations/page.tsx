@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+
 import {
   getAIExecutions,
   getMCPExecutions,
@@ -36,6 +37,8 @@ interface MCPExecution {
   input_source: string;
 }
 
+const ITEMS_PER_PAGE = 5;
+
 export default function OperationsPage() {
   const [executions, setExecutions] = useState<
     AIExecution[]
@@ -46,7 +49,10 @@ export default function OperationsPage() {
   >([]);
 
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     async function loadOperations() {
@@ -107,6 +113,51 @@ export default function OperationsPage() {
     );
   }, [executions, mcpExecutions]);
 
+  // =========================================================
+  // Pagination
+  // =========================================================
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(
+      executions.length / ITEMS_PER_PAGE
+    )
+  );
+
+  const paginatedExecutions = useMemo(() => {
+    const startIndex =
+      (currentPage - 1) * ITEMS_PER_PAGE;
+
+    return executions.slice(
+      startIndex,
+      startIndex + ITEMS_PER_PAGE
+    );
+  }, [executions, currentPage]);
+
+  const startRecord =
+    executions.length === 0
+      ? 0
+      : (currentPage - 1) *
+          ITEMS_PER_PAGE +
+        1;
+
+  const endRecord = Math.min(
+    currentPage * ITEMS_PER_PAGE,
+    executions.length
+  );
+
+  const goToPreviousPage = () => {
+    setCurrentPage((page) =>
+      Math.max(1, page - 1)
+    );
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage((page) =>
+      Math.min(totalPages, page + 1)
+    );
+  };
+
   return (
     <main className="min-h-screen bg-slate-50 p-8">
       <div className="mx-auto max-w-7xl">
@@ -119,7 +170,7 @@ export default function OperationsPage() {
           </p>
 
           <h1 className="mt-1 text-3xl font-bold text-slate-900">
-            AI Operations Center
+            AI Workflow Monitoring
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
@@ -182,7 +233,8 @@ export default function OperationsPage() {
             </p>
 
             <p className="mt-1 text-xs text-slate-400">
-              {mcpSuccessful} successful · {mcpFailed} failed
+              {mcpSuccessful} successful ·{" "}
+              {mcpFailed} failed
             </p>
           </div>
 
@@ -194,6 +246,7 @@ export default function OperationsPage() {
           <div className="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
 
             <div className="border-b border-slate-100 p-6">
+
               <h2 className="text-lg font-semibold text-slate-900">
                 Latest AI Execution
               </h2>
@@ -201,6 +254,7 @@ export default function OperationsPage() {
               <p className="mt-1 text-sm text-slate-500">
                 End-to-end execution trace.
               </p>
+
             </div>
 
             <div className="grid gap-6 p-6 md:grid-cols-4">
@@ -295,7 +349,9 @@ export default function OperationsPage() {
                           : "font-semibold text-red-600"
                       }
                     >
-                      {valid ? "PASSED" : "FAILED"}
+                      {valid
+                        ? "PASSED"
+                        : "FAILED"}
                     </span>
                   </div>
                 ))}
@@ -329,6 +385,7 @@ export default function OperationsPage() {
 
                     <thead className="border-b border-slate-100">
                       <tr>
+
                         <th className="px-4 py-3 font-semibold text-slate-500">
                           Tool
                         </th>
@@ -344,6 +401,7 @@ export default function OperationsPage() {
                         <th className="px-4 py-3 font-semibold text-slate-500">
                           Source
                         </th>
+
                       </tr>
                     </thead>
 
@@ -403,13 +461,30 @@ export default function OperationsPage() {
         <div className="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
 
           <div className="border-b border-slate-100 p-6">
-            <h2 className="text-lg font-semibold text-slate-900">
-              Recent AI Executions
-            </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
-              AI workflow execution history.
-            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Recent AI Executions
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  AI workflow execution history.
+                </p>
+              </div>
+
+              {!loading &&
+                !error &&
+                executions.length > 0 && (
+                  <span className="text-xs text-slate-500">
+                    Showing {startRecord}–{endRecord} of{" "}
+                    {executions.length}
+                  </span>
+                )}
+
+            </div>
+
           </div>
 
           {loading && (
@@ -435,93 +510,154 @@ export default function OperationsPage() {
           {!loading &&
             !error &&
             executions.length > 0 && (
-              <div className="overflow-x-auto">
+              <>
+                <div className="overflow-x-auto">
 
-                <table className="w-full text-left text-sm">
+                  <table className="w-full text-left text-sm">
 
-                  <thead className="border-b border-slate-100 bg-slate-50">
-                    <tr>
-                      <th className="px-6 py-4 font-semibold text-slate-600">
-                        Workflow
-                      </th>
+                    <thead className="border-b border-slate-100 bg-slate-50">
+                      <tr>
 
-                      <th className="px-6 py-4 font-semibold text-slate-600">
-                        Model
-                      </th>
+                        <th className="px-6 py-4 font-semibold text-slate-600">
+                          Workflow
+                        </th>
 
-                      <th className="px-6 py-4 font-semibold text-slate-600">
-                        Status
-                      </th>
+                        <th className="px-6 py-4 font-semibold text-slate-600">
+                          Model
+                        </th>
 
-                      <th className="px-6 py-4 font-semibold text-slate-600">
-                        Validation
-                      </th>
+                        <th className="px-6 py-4 font-semibold text-slate-600">
+                          Status
+                        </th>
 
-                      <th className="px-6 py-4 font-semibold text-slate-600">
-                        Input Source
-                      </th>
-                    </tr>
-                  </thead>
+                        <th className="px-6 py-4 font-semibold text-slate-600">
+                          Validation
+                        </th>
 
-                  <tbody>
-                    {executions.map(
-                      (execution) => (
-                        <tr
-                          key={execution.execution_id}
-                          className="border-b border-slate-100 last:border-0"
-                        >
+                        <th className="px-6 py-4 font-semibold text-slate-600">
+                          Input Source
+                        </th>
 
-                          <td className="px-6 py-4 font-medium text-slate-900">
-                            {execution.workflow}
-                          </td>
+                      </tr>
+                    </thead>
 
-                          <td className="px-6 py-4 text-slate-600">
-                            {execution.model}
-                          </td>
+                    <tbody>
 
-                          <td className="px-6 py-4">
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                execution.status ===
-                                "SUCCESS"
-                                  ? "bg-green-50 text-green-700"
-                                  : execution.status ===
-                                    "FAILED"
-                                  ? "bg-red-50 text-red-700"
-                                  : "bg-amber-50 text-amber-700"
-                              }`}
-                            >
-                              {execution.status}
-                            </span>
-                          </td>
+                      {paginatedExecutions.map(
+                        (execution) => (
+                          <tr
+                            key={execution.execution_id}
+                            className="border-b border-slate-100 last:border-0"
+                          >
 
-                          <td className="px-6 py-4">
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                execution.validation_status ===
-                                "PASSED"
-                                  ? "bg-blue-50 text-blue-700"
-                                  : "bg-red-50 text-red-700"
-                              }`}
-                            >
-                              {
-                                execution.validation_status
-                              }
-                            </span>
-                          </td>
+                            <td className="px-6 py-4 font-medium text-slate-900">
+                              {execution.workflow}
+                            </td>
 
-                          <td className="px-6 py-4 text-slate-600">
-                            {execution.input_source}
-                          </td>
+                            <td className="px-6 py-4 text-slate-600">
+                              {execution.model}
+                            </td>
 
-                        </tr>
-                      )
-                    )}
-                  </tbody>
+                            <td className="px-6 py-4">
+                              <span
+                                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                  execution.status ===
+                                  "SUCCESS"
+                                    ? "bg-green-50 text-green-700"
+                                    : execution.status ===
+                                      "FAILED"
+                                    ? "bg-red-50 text-red-700"
+                                    : "bg-amber-50 text-amber-700"
+                                }`}
+                              >
+                                {execution.status}
+                              </span>
+                            </td>
 
-                </table>
+                            <td className="px-6 py-4">
+                              <span
+                                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                  execution.validation_status ===
+                                  "PASSED"
+                                    ? "bg-blue-50 text-blue-700"
+                                    : "bg-red-50 text-red-700"
+                                }`}
+                              >
+                                {
+                                  execution.validation_status
+                                }
+                              </span>
+                            </td>
 
-              </div>
+                            <td className="px-6 py-4 text-slate-600">
+                              {execution.input_source}
+                            </td>
+
+                          </tr>
+                        )
+                      )}
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+                {/* Pagination */}
+
+                <div className="flex flex-col gap-4 border-t border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+
+                  <p className="text-xs text-slate-500">
+                    Page {currentPage} of{" "}
+                    {totalPages}
+                  </p>
+
+                  <div className="flex items-center gap-2">
+
+                    <button
+                      type="button"
+                      onClick={goToPreviousPage}
+                      disabled={currentPage === 1}
+                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      ← Previous
+                    </button>
+
+                    {Array.from(
+                      { length: totalPages },
+                      (_, index) => index + 1
+                    ).map((page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() =>
+                          setCurrentPage(page)
+                        }
+                        className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                          currentPage === page
+                            ? "bg-blue-600 text-white"
+                            : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={goToNextPage}
+                      disabled={
+                        currentPage === totalPages
+                      }
+                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Next →
+                    </button>
+
+                  </div>
+
+                </div>
+              </>
             )}
 
         </div>

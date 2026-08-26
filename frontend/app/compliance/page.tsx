@@ -32,6 +32,8 @@ interface MCPExecution {
   input_source: string;
 }
 
+const ITEMS_PER_PAGE = 5;
+
 function StatusBadge({
   status,
 }: {
@@ -105,6 +107,9 @@ export default function CompliancePage() {
   const [error, setError] =
     useState("");
 
+  const [currentPage, setCurrentPage] =
+    useState(1);
+
   useEffect(() => {
     async function loadComplianceData() {
       try {
@@ -124,7 +129,6 @@ export default function CompliancePage() {
         }
 
         setMCPExecutions(mcpData);
-
       } catch (err) {
         setError(
           err instanceof Error
@@ -204,6 +208,51 @@ export default function CompliancePage() {
 
   const issues =
     validation?.issues ?? [];
+
+  // =========================================================
+  // MCP pagination
+  // =========================================================
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(
+      mcpExecutions.length /
+        ITEMS_PER_PAGE
+    )
+  );
+
+  const startIndex =
+    (currentPage - 1) * ITEMS_PER_PAGE;
+
+  const paginatedMCPExecutions =
+    mcpExecutions.slice(
+      startIndex,
+      startIndex + ITEMS_PER_PAGE
+    );
+
+  const startRecord =
+    mcpExecutions.length === 0
+      ? 0
+      : (currentPage - 1) *
+          ITEMS_PER_PAGE +
+        1;
+
+  const endRecord = Math.min(
+    currentPage * ITEMS_PER_PAGE,
+    mcpExecutions.length
+  );
+
+  const goToPreviousPage = () => {
+    setCurrentPage((page) =>
+      Math.max(1, page - 1)
+    );
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage((page) =>
+      Math.min(totalPages, page + 1)
+    );
+  };
 
   return (
     <main className="min-h-screen bg-slate-50 p-8">
@@ -363,7 +412,9 @@ export default function CompliancePage() {
 
               <div className="mt-1">
                 <StatusBadge
-                  status={execution.validation_status}
+                  status={
+                    execution.validation_status
+                  }
                 />
               </div>
             </div>
@@ -396,6 +447,7 @@ export default function CompliancePage() {
 
           {issues.length === 0 ? (
             <div className="mt-4 rounded-xl border border-green-100 bg-green-50 p-4">
+
               <p className="text-sm font-medium text-green-700">
                 ✓ No validation issues detected.
               </p>
@@ -404,17 +456,22 @@ export default function CompliancePage() {
                 The latest AI output passed all configured
                 validation checks.
               </p>
+
             </div>
           ) : (
             <ul className="mt-4 space-y-2">
-              {issues.map((issue, index) => (
-                <li
-                  key={index}
-                  className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
-                >
-                  {issue}
-                </li>
-              ))}
+
+              {issues.map(
+                (issue, index) => (
+                  <li
+                    key={index}
+                    className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
+                  >
+                    {issue}
+                  </li>
+                )
+              )}
+
             </ul>
           )}
 
@@ -426,14 +483,27 @@ export default function CompliancePage() {
 
           <div className="border-b border-slate-100 p-6">
 
-            <h2 className="text-lg font-semibold text-slate-900">
-              MCP Execution Audit
-            </h2>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-            <p className="mt-1 text-sm text-slate-500">
-              Read-only MCP tool executions used during
-              the AI analysis workflow.
-            </p>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  MCP Execution Audit
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Read-only MCP tool executions used during
+                  the AI analysis workflow.
+                </p>
+              </div>
+
+              {mcpExecutions.length > 0 && (
+                <span className="text-xs text-slate-500">
+                  Showing {startRecord}–{endRecord} of{" "}
+                  {mcpExecutions.length}
+                </span>
+              )}
+
+            </div>
 
           </div>
 
@@ -442,70 +512,135 @@ export default function CompliancePage() {
               No MCP execution records available.
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+              <div className="overflow-x-auto">
 
-              <table className="w-full text-left text-sm">
+                <table className="w-full text-left text-sm">
 
-                <thead className="border-b border-slate-100 bg-slate-50">
+                  <thead className="border-b border-slate-100 bg-slate-50">
 
-                  <tr>
+                    <tr>
 
-                    <th className="px-6 py-4 font-semibold text-slate-600">
-                      MCP Tool
-                    </th>
+                      <th className="px-6 py-4 font-semibold text-slate-600">
+                        MCP Tool
+                      </th>
 
-                    <th className="px-6 py-4 font-semibold text-slate-600">
-                      Status
-                    </th>
+                      <th className="px-6 py-4 font-semibold text-slate-600">
+                        Status
+                      </th>
 
-                    <th className="px-6 py-4 font-semibold text-slate-600">
-                      Duration
-                    </th>
+                      <th className="px-6 py-4 font-semibold text-slate-600">
+                        Duration
+                      </th>
 
-                    <th className="px-6 py-4 font-semibold text-slate-600">
-                      Source
-                    </th>
+                      <th className="px-6 py-4 font-semibold text-slate-600">
+                        Source
+                      </th>
 
-                  </tr>
+                    </tr>
 
-                </thead>
+                  </thead>
 
-                <tbody>
+                  <tbody>
 
-                  {mcpExecutions.map(
-                    (record, index) => (
-                      <tr
-                        key={`${record.execution_id}-${record.tool_name}-${index}`}
-                        className="border-b border-slate-100 last:border-0"
-                      >
+                    {paginatedMCPExecutions.map(
+                      (record, index) => (
+                        <tr
+                          key={`${record.execution_id}-${record.tool_name}-${index}`}
+                          className="border-b border-slate-100 last:border-0"
+                        >
 
-                        <td className="px-6 py-4 font-medium text-slate-900">
-                          {record.tool_name}
-                        </td>
+                          <td className="px-6 py-4 font-medium text-slate-900">
+                            {record.tool_name}
+                          </td>
 
-                        <td className="px-6 py-4">
-                          <StatusBadge
-                            status={record.status}
-                          />
-                        </td>
+                          <td className="px-6 py-4">
+                            <StatusBadge
+                              status={record.status}
+                            />
+                          </td>
 
-                        <td className="px-6 py-4 text-slate-600">
-                          {record.duration_ms.toFixed(2)} ms
-                        </td>
+                          <td className="px-6 py-4 text-slate-600">
+                            {record.duration_ms.toFixed(
+                              2
+                            )}{" "}
+                            ms
+                          </td>
 
-                        <td className="px-6 py-4 text-slate-600">
-                          {record.input_source}
-                        </td>
+                          <td className="px-6 py-4 text-slate-600">
+                            {record.input_source}
+                          </td>
 
-                      </tr>
-                    )
-                  )}
+                        </tr>
+                      )
+                    )}
 
-                </tbody>
+                  </tbody>
 
-              </table>
+                </table>
 
-            </div>
+              </div>
+
+              {/* Pagination */}
+
+              <div className="flex flex-col gap-4 border-t border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+
+                <p className="text-xs text-slate-500">
+                  Page {currentPage} of{" "}
+                  {totalPages}
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2">
+
+                  <button
+                    type="button"
+                    onClick={goToPreviousPage}
+                    disabled={
+                      currentPage === 1
+                    }
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    ← Previous
+                  </button>
+
+                  {Array.from(
+                    {
+                      length: totalPages,
+                    },
+                    (_, index) =>
+                      index + 1
+                  ).map((page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      onClick={() =>
+                        setCurrentPage(page)
+                      }
+                      className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                        currentPage === page
+                          ? "bg-blue-600 text-white"
+                          : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={goToNextPage}
+                    disabled={
+                      currentPage === totalPages
+                    }
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Next →
+                  </button>
+
+                </div>
+
+              </div>
+            </>
           )}
 
         </section>

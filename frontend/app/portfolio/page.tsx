@@ -81,8 +81,8 @@ export default async function PortfolioPage() {
   return (
     <div>
       <PageHeader
-        title="Portfolio"
-        subtitle="Manage all your investments."
+        title="Portfolio Overview"
+        subtitle="Review holdings, allocation, performance, and risk."
       />
 
       {/* KPI Cards */}
