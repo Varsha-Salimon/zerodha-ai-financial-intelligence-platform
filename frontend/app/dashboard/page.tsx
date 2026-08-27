@@ -74,11 +74,11 @@ function formatCurrency(value: number) {
 }
 
 /*
- * Format monetary and percentage values appearing inside
- * AI-generated explanatory text.
+ * Format monetary and percentage values appearing
+ * inside AI-generated explanatory text.
  *
- * The underlying AI data is not changed.
- * This only improves presentation in the dashboard.
+ * This changes presentation only.
+ * The underlying AI response remains unchanged.
  */
 function formatAIText(
   text: string,
@@ -104,13 +104,13 @@ function formatAIText(
       }
     )}`;
 
-    formatted = formatted.split(rawDecimal).join(
-      formattedValue
-    );
+    formatted = formatted
+      .split(rawDecimal)
+      .join(formattedValue);
 
-    formatted = formatted.split(rawInteger).join(
-      formattedValue
-    );
+    formatted = formatted
+      .split(rawInteger)
+      .join(formattedValue);
   });
 
   /*
@@ -123,7 +123,7 @@ function formatAIText(
   );
 
   /*
-   * Remove unnecessary .0 from standalone decimal numbers.
+   * Remove unnecessary .0 from standalone numbers.
    */
   formatted = formatted.replace(
     /(\d+)\.0\b/g,
@@ -162,7 +162,7 @@ export default function DashboardPage() {
     useState("");
 
   /*
-   * Load portfolio data independently from AI analysis.
+   * Load portfolio data.
    */
   useEffect(() => {
     async function loadPortfolioData() {
@@ -227,7 +227,7 @@ export default function DashboardPage() {
   }, []);
 
   /*
-   * Initial portfolio loading state.
+   * Initial loading state.
    */
   if (loading) {
     return (
@@ -287,7 +287,7 @@ export default function DashboardPage() {
   }
 
   /*
-   * Find largest allocation dynamically.
+   * Find the largest portfolio allocation.
    */
   const largestAllocation =
     allocation.length > 0
@@ -300,11 +300,8 @@ export default function DashboardPage() {
       : null;
 
   /*
-   * Use the exact message returned by the backend.
-   *
-   * Example:
-   * "TCS represents 49.78% of the portfolio.
-   *  The portfolio has moderate concentration risk."
+   * Use the exact risk message supplied by
+   * the backend API.
    */
   const riskMessage =
     risk?.message ??
@@ -315,7 +312,7 @@ export default function DashboardPage() {
       : "Portfolio concentration risk is being monitored.");
 
   /*
-   * Dynamic allocation chart.
+   * Colors used by the allocation chart.
    */
   const allocationColors = [
     "#2563eb",
@@ -326,31 +323,51 @@ export default function DashboardPage() {
     "#ef4444",
   ];
 
-  let cumulativePercentage = 0;
+  /*
+   * Build the conic-gradient segments without
+   * mutating a variable during render.
+   *
+   * The accumulator keeps track of the cumulative
+   * percentage for each segment.
+   */
+  const allocationStops = allocation.reduce<{
+    stops: string[];
+    cumulative: number;
+  }>(
+    (result, item, index) => {
+      const start = result.cumulative;
 
-  const allocationStops = allocation.map(
-    (item, index) => {
-      const start = cumulativePercentage;
-
-      cumulativePercentage +=
-        item.allocation_percentage;
-
-      const end = cumulativePercentage;
+      const end =
+        start + item.allocation_percentage;
 
       const color =
         allocationColors[
           index % allocationColors.length
         ];
 
-      return `${color} ${start}% ${end}%`;
+      result.stops.push(
+        `${color} ${start}% ${end}%`
+      );
+
+      return {
+        stops: result.stops,
+        cumulative: end,
+      };
+    },
+    {
+      stops: [],
+      cumulative: 0,
     }
-  );
+  ).stops;
 
   const allocationGradient =
     allocationStops.length > 0
       ? `conic-gradient(${allocationStops.join(", ")})`
       : "conic-gradient(#e2e8f0 0% 100%)";
 
+  /*
+   * KPI data.
+   */
   const kpiData = [
     {
       title: "Portfolio Value",
