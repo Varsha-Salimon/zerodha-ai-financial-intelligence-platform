@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import PageHeader from "@/components/PageHeader";
@@ -13,6 +14,7 @@ import {
   getAIAnalysis,
 } from "@/lib/api";
 
+
 interface PortfolioSummary {
   total_investment: number;
   current_value: number;
@@ -22,11 +24,13 @@ interface PortfolioSummary {
   worst_performer: string;
 }
 
+
 interface AllocationItem {
   stock: string;
   current_value: number;
   allocation_percentage: number;
 }
+
 
 interface PerformanceItem {
   stock: string;
@@ -36,6 +40,7 @@ interface PerformanceItem {
   return_percentage: number;
 }
 
+
 interface PortfolioRisk {
   risk_level: string;
   largest_holding: string;
@@ -44,27 +49,35 @@ interface PortfolioRisk {
   message: string;
 }
 
+
 interface AIAnalysis {
   portfolio_overview: string;
+
   key_observations: string[];
+
   risk_analysis: {
     risk_level: string;
     summary: string;
   };
+
   performance_highlights: {
     stock: string;
     return_percentage: number;
     profit: number;
     observation: string;
   }[];
+
   diversification_considerations: string[];
+
   market_context?: {
     stock: string;
     headline: string;
     observation: string;
   }[];
+
   disclaimer: string;
 }
+
 
 function formatCurrency(value: number) {
   return `₹${value.toLocaleString("en-IN", {
@@ -72,6 +85,7 @@ function formatCurrency(value: number) {
     maximumFractionDigits: 2,
   })}`;
 }
+
 
 /*
  * Format monetary and percentage values appearing
@@ -113,14 +127,21 @@ function formatAIText(
       .join(formattedValue);
   });
 
+
   /*
    * Convert:
-   * 3.67 percent -> 3.67%
+   *
+   * 3.67 percent
+   *
+   * into:
+   *
+   * 3.67%
    */
   formatted = formatted.replace(
     /(\d+(?:\.\d+)?)\s+percent\b/gi,
     "$1%"
   );
+
 
   /*
    * Remove unnecessary .0 from standalone numbers.
@@ -130,10 +151,13 @@ function formatAIText(
     "$1"
   );
 
+
   return formatted;
 }
 
-export default function DashboardPage() {
+
+export default function UserDashboard() {
+
   const [summary, setSummary] =
     useState<PortfolioSummary | null>(null);
 
@@ -161,12 +185,16 @@ export default function DashboardPage() {
   const [aiAnalysisError, setAIAnalysisError] =
     useState("");
 
+
   /*
    * Load portfolio data.
    */
   useEffect(() => {
+
     async function loadPortfolioData() {
+
       try {
+
         setLoading(true);
         setError("");
 
@@ -186,118 +214,158 @@ export default function DashboardPage() {
         setAllocation(allocationData);
         setPerformance(performanceData);
         setRisk(riskData);
+
       } catch (err) {
+
         setError(
           err instanceof Error
             ? err.message
             : "Failed to load portfolio data"
         );
+
       } finally {
+
         setLoading(false);
+
       }
     }
 
+
     loadPortfolioData();
+
   }, []);
+
 
   /*
    * Load AI analysis independently.
    */
   useEffect(() => {
+
     async function loadAIAnalysis() {
+
       try {
+
         setAIAnalysisLoading(true);
         setAIAnalysisError("");
 
-        const data = await getAIAnalysis();
+        const data =
+          await getAIAnalysis();
 
         setAIAnalysis(data);
+
       } catch (err) {
+
         setAIAnalysisError(
           err instanceof Error
             ? err.message
             : "Failed to load AI analysis"
         );
+
       } finally {
+
         setAIAnalysisLoading(false);
+
       }
     }
 
+
     loadAIAnalysis();
+
   }, []);
+
 
   /*
    * Initial loading state.
    */
   if (loading) {
+
     return (
       <main>
+
         <PageHeader
           title="Zerodha AI Financial Intelligence Platform"
           subtitle="AI-powered portfolio intelligence and explainable investment analysis."
         />
 
         <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+
           <p className="text-sm text-slate-500">
             Loading portfolio intelligence...
           </p>
+
         </div>
+
       </main>
     );
   }
+
 
   /*
    * Portfolio API error.
    */
   if (error) {
+
     return (
       <main>
+
         <PageHeader
           title="Zerodha AI Financial Intelligence Platform"
           subtitle="AI-powered portfolio intelligence and explainable investment analysis."
         />
 
         <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5">
+
           <p className="text-sm text-red-700">
             {error}
           </p>
+
         </div>
+
       </main>
     );
   }
+
 
   /*
    * No portfolio data.
    */
   if (!summary) {
+
     return (
       <main>
+
         <PageHeader
           title="Zerodha AI Financial Intelligence Platform"
           subtitle="AI-powered portfolio intelligence and explainable investment analysis."
         />
 
         <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+
           <p className="text-sm text-slate-500">
             No portfolio data available.
           </p>
+
         </div>
+
       </main>
     );
   }
+
 
   /*
    * Find the largest portfolio allocation.
    */
   const largestAllocation =
     allocation.length > 0
-      ? allocation.reduce((largest, current) =>
-          current.allocation_percentage >
-          largest.allocation_percentage
-            ? current
-            : largest
+      ? allocation.reduce(
+          (largest, current) =>
+            current.allocation_percentage >
+            largest.allocation_percentage
+              ? current
+              : largest
         )
       : null;
+
 
   /*
    * Use the exact risk message supplied by
@@ -305,11 +373,14 @@ export default function DashboardPage() {
    */
   const riskMessage =
     risk?.message ??
-    (largestAllocation
-      ? `${largestAllocation.stock} represents ${largestAllocation.allocation_percentage.toFixed(
-          2
-        )}% of the portfolio. The portfolio has moderate concentration risk.`
-      : "Portfolio concentration risk is being monitored.");
+    (
+      largestAllocation
+        ? `${largestAllocation.stock} represents ${largestAllocation.allocation_percentage.toFixed(
+            2
+          )}% of the portfolio. The portfolio has moderate concentration risk.`
+        : "Portfolio concentration risk is being monitored."
+    );
+
 
   /*
    * Colors used by the allocation chart.
@@ -323,6 +394,7 @@ export default function DashboardPage() {
     "#ef4444",
   ];
 
+
   /*
    * Build the conic-gradient segments without
    * mutating a variable during render.
@@ -330,40 +402,49 @@ export default function DashboardPage() {
    * The accumulator keeps track of the cumulative
    * percentage for each segment.
    */
-  const allocationStops = allocation.reduce<{
-    stops: string[];
-    cumulative: number;
-  }>(
-    (result, item, index) => {
-      const start = result.cumulative;
+  const allocationStops =
+    allocation.reduce<{
+      stops: string[];
+      cumulative: number;
+    }>(
+      (result, item, index) => {
 
-      const end =
-        start + item.allocation_percentage;
+        const start =
+          result.cumulative;
 
-      const color =
-        allocationColors[
-          index % allocationColors.length
-        ];
+        const end =
+          start +
+          item.allocation_percentage;
 
-      result.stops.push(
-        `${color} ${start}% ${end}%`
-      );
+        const color =
+          allocationColors[
+            index %
+              allocationColors.length
+          ];
 
-      return {
-        stops: result.stops,
-        cumulative: end,
-      };
-    },
-    {
-      stops: [],
-      cumulative: 0,
-    }
-  ).stops;
+        result.stops.push(
+          `${color} ${start}% ${end}%`
+        );
+
+        return {
+          stops: result.stops,
+          cumulative: end,
+        };
+      },
+      {
+        stops: [],
+        cumulative: 0,
+      }
+    ).stops;
+
 
   const allocationGradient =
     allocationStops.length > 0
-      ? `conic-gradient(${allocationStops.join(", ")})`
+      ? `conic-gradient(${allocationStops.join(
+          ", "
+        )})`
       : "conic-gradient(#e2e8f0 0% 100%)";
+
 
   /*
    * KPI data.
@@ -371,28 +452,38 @@ export default function DashboardPage() {
   const kpiData = [
     {
       title: "Portfolio Value",
-      value: formatCurrency(summary.current_value),
+      value: formatCurrency(
+        summary.current_value
+      ),
       color: "text-slate-900",
     },
+
     {
       title: "Total Profit",
-      value: formatCurrency(summary.profit),
+      value: formatCurrency(
+        summary.profit
+      ),
       color:
         summary.profit >= 0
           ? "text-green-600"
           : "text-red-600",
     },
+
     {
       title: "Portfolio Return",
-      value: `${summary.profit_percentage.toFixed(2)}%`,
+      value: `${summary.profit_percentage.toFixed(
+        2
+      )}%`,
       color:
         summary.profit_percentage >= 0
           ? "text-green-600"
           : "text-red-600",
     },
+
     {
       title: "Risk Level",
-      value: risk?.risk_level ?? "N/A",
+      value:
+        risk?.risk_level ?? "N/A",
       color:
         risk?.risk_level === "HIGH"
           ? "text-red-600"
@@ -401,6 +492,7 @@ export default function DashboardPage() {
           : "text-green-600",
     },
   ];
+
 
   return (
     <main className="space-y-8">
@@ -412,18 +504,24 @@ export default function DashboardPage() {
         subtitle="AI-powered portfolio intelligence and explainable investment analysis."
       />
 
+
       {/* KPI Cards */}
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+
         {kpiData.map((item) => (
+
           <KPICard
             key={item.title}
             title={item.title}
             value={item.value}
             valueColor={item.color}
           />
+
         ))}
+
       </div>
+
 
       {/* Allocation and Performance */}
 
@@ -434,6 +532,7 @@ export default function DashboardPage() {
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
           <div>
+
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">
               Allocation
             </p>
@@ -445,7 +544,9 @@ export default function DashboardPage() {
             <p className="mt-1 text-sm text-slate-500">
               Current portfolio value by holding.
             </p>
+
           </div>
+
 
           <div className="mt-6 flex items-center justify-center">
 
@@ -454,9 +555,11 @@ export default function DashboardPage() {
               <div
                 className="h-full w-full rounded-full"
                 style={{
-                  background: allocationGradient,
+                  background:
+                    allocationGradient,
                 }}
               />
+
 
               <div className="absolute inset-10 flex items-center justify-center rounded-full bg-white">
 
@@ -478,49 +581,60 @@ export default function DashboardPage() {
 
           </div>
 
+
           <div className="mt-6 space-y-3">
 
-            {allocation.map((item, index) => (
-              <div
-                key={item.stock}
-                className="flex items-center justify-between"
-              >
+            {allocation.map(
+              (item, index) => (
 
-                <div className="flex items-center gap-2">
+                <div
+                  key={item.stock}
+                  className="flex items-center justify-between"
+                >
 
-                  <span
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{
-                      backgroundColor:
-                        allocationColors[
-                          index %
-                            allocationColors.length
-                        ],
-                    }}
-                  />
+                  <div className="flex items-center gap-2">
 
-                  <span className="text-sm font-medium text-slate-700">
-                    {item.stock}
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{
+                        backgroundColor:
+                          allocationColors[
+                            index %
+                              allocationColors.length
+                          ],
+                      }}
+                    />
+
+                    <span className="text-sm font-medium text-slate-700">
+                      {item.stock}
+                    </span>
+
+                  </div>
+
+
+                  <span className="text-sm font-semibold text-slate-900">
+                    {item.allocation_percentage.toFixed(
+                      2
+                    )}
+                    %
                   </span>
 
                 </div>
 
-                <span className="text-sm font-semibold text-slate-900">
-                  {item.allocation_percentage.toFixed(2)}%
-                </span>
-
-              </div>
-            ))}
+              )
+            )}
 
           </div>
 
         </section>
+
 
         {/* Performance */}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
           <div>
+
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">
               Performance
             </p>
@@ -532,82 +646,101 @@ export default function DashboardPage() {
             <p className="mt-1 text-sm text-slate-500">
               Return percentage by holding.
             </p>
+
           </div>
+
 
           <div className="mt-8 space-y-6">
 
-            {performance.map((item) => {
+            {performance.map(
+              (item) => {
 
-              const maxReturn = 7;
+                const maxReturn = 7;
 
-              const width = Math.min(
-                (Math.abs(
-                  item.return_percentage
-                ) /
-                  maxReturn) *
-                  100,
-                100
-              );
+                const width =
+                  Math.min(
+                    (
+                      Math.abs(
+                        item.return_percentage
+                      ) /
+                      maxReturn
+                    ) *
+                      100,
+                    100
+                  );
 
-              return (
-                <div key={item.stock}>
 
-                  <div className="mb-2 flex items-center justify-between">
+                return (
+                  <div key={item.stock}>
 
-                    <span className="text-sm font-medium text-slate-700">
-                      {item.stock}
-                    </span>
+                    <div className="mb-2 flex items-center justify-between">
 
-                    <span
-                      className={`text-sm font-bold ${
-                        item.return_percentage >= 0
+                      <span className="text-sm font-medium text-slate-700">
+                        {item.stock}
+                      </span>
+
+
+                      <span
+                        className={`text-sm font-bold ${
+                          item.return_percentage >= 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {item.return_percentage >= 0
+                          ? "+"
+                          : ""}
+                        {item.return_percentage.toFixed(
+                          2
+                        )}
+                        %
+                      </span>
+
+                    </div>
+
+
+                    <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+
+                      <div
+                        className={`h-full rounded-full ${
+                          item.return_percentage >= 0
+                            ? "bg-green-500"
+                            : "bg-red-500"
+                        }`}
+                        style={{
+                          width: `${width}%`,
+                        }}
+                      />
+
+                    </div>
+
+
+                    <p
+                      className={`mt-1 text-xs ${
+                        item.profit >= 0
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
                     >
-                      {item.return_percentage >= 0
+                      {item.profit >= 0
                         ? "+"
                         : ""}
-                      {item.return_percentage.toFixed(2)}%
-                    </span>
+                      {formatCurrency(
+                        item.profit
+                      )}
+                    </p>
 
                   </div>
-
-                  <div className="h-3 overflow-hidden rounded-full bg-slate-100">
-
-                    <div
-                      className={`h-full rounded-full ${
-                        item.return_percentage >= 0
-                          ? "bg-green-500"
-                          : "bg-red-500"
-                      }`}
-                      style={{
-                        width: `${width}%`,
-                      }}
-                    />
-
-                  </div>
-
-                  <p
-                    className={`mt-1 text-xs ${
-                      item.profit >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {item.profit >= 0 ? "+" : ""}
-                    {formatCurrency(item.profit)}
-                  </p>
-
-                </div>
-              );
-            })}
+                );
+              }
+            )}
 
           </div>
 
         </section>
 
       </div>
+
 
       {/* AI Portfolio Health */}
 
@@ -620,6 +753,7 @@ export default function DashboardPage() {
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 font-semibold text-white">
               AI
             </div>
+
 
             <div>
 
@@ -635,18 +769,21 @@ export default function DashboardPage() {
 
           </div>
 
-          <a
+
+          <Link
             href="/insights"
             className="text-sm font-semibold text-blue-600 hover:text-blue-700"
           >
             View detailed insights →
-          </a>
+          </Link>
 
         </div>
+
 
         {/* AI Loading */}
 
         {aiAnalysisLoading && (
+
           <div className="mt-6 rounded-xl bg-white/80 p-6">
 
             <div className="flex items-center gap-3">
@@ -669,12 +806,15 @@ export default function DashboardPage() {
             </div>
 
           </div>
+
         )}
+
 
         {/* AI Error */}
 
         {!aiAnalysisLoading &&
           aiAnalysisError && (
+
             <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5">
 
               <p className="text-sm font-medium text-amber-700">
@@ -686,25 +826,33 @@ export default function DashboardPage() {
               </p>
 
             </div>
+
           )}
+
 
         {/* AI Content */}
 
         {!aiAnalysisLoading &&
           !aiAnalysisError &&
           aiAnalysis && (
+
             <>
+
               <p className="mt-6 max-w-4xl text-sm leading-6 text-slate-600">
+
                 {formatAIText(
                   aiAnalysis.portfolio_overview,
                   summary
                 )}
+
               </p>
+
 
               <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
 
                 {aiAnalysis.key_observations.map(
                   (observation, index) => (
+
                     <div
                       key={index}
                       className="rounded-xl bg-white/80 p-4"
@@ -722,18 +870,23 @@ export default function DashboardPage() {
 
                       </div>
 
+
                       <p className="text-sm leading-5 text-slate-600">
+
                         {formatAIText(
                           observation,
                           summary
                         )}
+
                       </p>
 
                     </div>
+
                   )
                 )}
 
               </div>
+
 
               <div className="mt-5 rounded-xl bg-white/80 p-5">
 
@@ -751,24 +904,31 @@ export default function DashboardPage() {
 
                   </div>
 
+
                   <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600">
                     {aiAnalysis.risk_analysis.risk_level}
                   </span>
 
                 </div>
 
+
                 <p className="mt-3 text-sm leading-6 text-slate-600">
+
                   {formatAIText(
                     aiAnalysis.risk_analysis.summary,
                     summary
                   )}
+
                 </p>
 
               </div>
+
             </>
+
           )}
 
       </section>
+
 
       {/* Portfolio Health Details */}
 
@@ -786,6 +946,7 @@ export default function DashboardPage() {
             Portfolio Risk
           </h2>
 
+
           <p
             className={`mt-5 text-3xl font-bold ${
               risk?.risk_level === "HIGH"
@@ -798,18 +959,21 @@ export default function DashboardPage() {
             {risk?.risk_level ?? "N/A"}
           </p>
 
+
           <p className="mt-3 text-sm leading-5 text-slate-500">
             {riskMessage}
           </p>
 
-          <a
+
+          <Link
             href="/portfolio"
             className="mt-5 inline-block text-sm font-semibold text-blue-600 hover:text-blue-700"
           >
             View portfolio details →
-          </a>
+          </Link>
 
         </section>
+
 
         {/* Best Performer */}
 
@@ -823,11 +987,15 @@ export default function DashboardPage() {
             {summary.best_performer}
           </h2>
 
+
           {performance.find(
             (item) =>
-              item.stock === summary.best_performer
+              item.stock ===
+              summary.best_performer
           ) && (
+
             <p className="mt-5 text-3xl font-bold text-green-600">
+
               +
               {performance
                 .find(
@@ -835,10 +1003,16 @@ export default function DashboardPage() {
                     item.stock ===
                     summary.best_performer
                 )!
-                .return_percentage.toFixed(2)}
+                .return_percentage.toFixed(
+                  2
+                )}
+
               %
+
             </p>
+
           )}
+
 
           <p className="mt-3 text-sm text-slate-500">
             Strongest return among current portfolio
@@ -846,6 +1020,7 @@ export default function DashboardPage() {
           </p>
 
         </section>
+
 
         {/* Worst Performer */}
 
@@ -859,21 +1034,31 @@ export default function DashboardPage() {
             {summary.worst_performer}
           </h2>
 
+
           {performance.find(
             (item) =>
-              item.stock === summary.worst_performer
+              item.stock ===
+              summary.worst_performer
           ) && (
+
             <p className="mt-5 text-3xl font-bold text-red-600">
+
               {performance
                 .find(
                   (item) =>
                     item.stock ===
                     summary.worst_performer
                 )!
-                .return_percentage.toFixed(2)}
+                .return_percentage.toFixed(
+                  2
+                )}
+
               %
+
             </p>
+
           )}
+
 
           <p className="mt-3 text-sm text-slate-500">
             Holding currently showing the weakest
@@ -883,6 +1068,7 @@ export default function DashboardPage() {
         </section>
 
       </div>
+
 
       {/* Explore Platform */}
 
@@ -897,12 +1083,16 @@ export default function DashboardPage() {
           and governance capabilities.
         </p>
 
-        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
 
-          <a
+        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+
+          {/* Portfolio */}
+
+          <Link
             href="/portfolio"
             className="rounded-xl bg-slate-50 p-4 transition hover:bg-blue-50"
           >
+
             <p className="font-semibold text-slate-900">
               Portfolio
             </p>
@@ -910,12 +1100,17 @@ export default function DashboardPage() {
             <p className="mt-1 text-sm text-slate-500">
               Detailed holdings, allocation, and performance.
             </p>
-          </a>
 
-          <a
+          </Link>
+
+
+          {/* AI Insights */}
+
+          <Link
             href="/insights"
             className="rounded-xl bg-slate-50 p-4 transition hover:bg-blue-50"
           >
+
             <p className="font-semibold text-slate-900">
               AI Insights
             </p>
@@ -923,28 +1118,19 @@ export default function DashboardPage() {
             <p className="mt-1 text-sm text-slate-500">
               Explainable recommendations and AI analysis.
             </p>
-          </a>
 
-          <a
-            href="/operations"
-            className="rounded-xl bg-slate-50 p-4 transition hover:bg-blue-50"
-          >
-            <p className="font-semibold text-slate-900">
-              AI Operations
-            </p>
+          </Link>
 
-            <p className="mt-1 text-sm text-slate-500">
-              Workflow execution and AI system monitoring.
-            </p>
-          </a>
 
         </div>
 
       </section>
 
+
       {/* Disclaimer */}
 
       {aiAnalysis?.disclaimer && (
+
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 
           <p className="text-xs leading-5 text-slate-500">
@@ -952,6 +1138,7 @@ export default function DashboardPage() {
           </p>
 
         </div>
+
       )}
 
     </main>

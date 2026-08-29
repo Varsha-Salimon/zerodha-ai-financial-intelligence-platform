@@ -92,7 +92,7 @@ export default function PortfolioPerformance({
         {/* Needs Attention */}
         <div className="rounded-xl bg-slate-50 p-5">
           <p className="text-sm font-medium text-slate-600">
-            Needs Attention
+            Lowest Return
           </p>
 
           <p className="mt-2 text-xl font-bold text-slate-900">

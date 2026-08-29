@@ -6,9 +6,10 @@ from app.database.models import PortfolioHolding
 from app.services.analytics_service import calculate_summary
 
 
-def get_portfolio_data():
+def get_portfolio_data(user_id: int):
     """
-    Retrieve portfolio holdings from PostgreSQL.
+    Retrieve portfolio holdings belonging
+    only to the specified user.
     """
 
     db: Session = SessionLocal()
@@ -16,6 +17,9 @@ def get_portfolio_data():
     try:
         holdings = (
             db.query(PortfolioHolding)
+            .filter(
+                PortfolioHolding.user_id == user_id
+            )
             .order_by(PortfolioHolding.id)
             .all()
         )
@@ -37,12 +41,17 @@ def get_portfolio_data():
         db.close()
 
 
-def get_portfolio_summary():
+def get_portfolio_summary(user_id: int):
     """
     Calculate portfolio summary using
-    database-backed portfolio data.
+    database-backed portfolio data belonging
+    to the specified user.
     """
 
-    portfolio = get_portfolio_data()
+    portfolio = get_portfolio_data(
+        user_id
+    )
 
-    return calculate_summary(portfolio)
+    return calculate_summary(
+        portfolio
+    )

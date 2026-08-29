@@ -5,7 +5,9 @@ import uuid
 from pathlib import Path
 
 from app.schemas.ai_analysis_schema import AIAnalysis
-from app.services.validation_service import validate_ai_analysis
+from app.services.validation_service import (
+    validate_ai_analysis,
+)
 from app.services.mcp_telemetry_service import (
     execute_mcp_tool,
 )
@@ -38,7 +40,9 @@ MCP_SERVER_PATH = (
 
 load_dotenv(PROJECT_ROOT / ".env")
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_KEY = os.getenv(
+    "GEMINI_API_KEY"
+)
 
 GEMINI_MODEL = os.getenv(
     "GEMINI_MODEL",
@@ -98,10 +102,14 @@ def extract_mcp_result(result):
 # Get portfolio context through MCP
 # ============================================================
 
-async def get_portfolio_context(execution_id):
+async def get_portfolio_context(
+    execution_id,
+    user_id,
+):
     """
     Connect to the MCP server and retrieve
-    portfolio information through MCP tools.
+    user-specific portfolio information through
+    MCP tools.
     """
 
     async with stdio_client(
@@ -141,24 +149,35 @@ async def get_portfolio_context(execution_id):
 
             if missing_tools:
                 raise RuntimeError(
-                    f"Required MCP tools are missing: {missing_tools}"
+                    f"Required MCP tools are missing: "
+                    f"{missing_tools}"
                 )
 
             # ------------------------------------------------
-            # Call MCP tools
+            # Call user-specific portfolio MCP tools
             # ------------------------------------------------
 
             portfolio_result = await execute_mcp_tool(
                 session,
                 "get_portfolio",
                 execution_id,
+                arguments={
+                    "user_id": user_id
+                },
             )
 
             analytics_result = await execute_mcp_tool(
                 session,
                 "get_portfolio_analytics",
                 execution_id,
+                arguments={
+                    "user_id": user_id
+                },
             )
+
+            # ------------------------------------------------
+            # Shared market data
+            # ------------------------------------------------
 
             market_result = await execute_mcp_tool(
                 session,
@@ -166,10 +185,17 @@ async def get_portfolio_context(execution_id):
                 execution_id,
             )
 
+            # ------------------------------------------------
+            # User-specific portfolio news
+            # ------------------------------------------------
+
             news_result = await execute_mcp_tool(
                 session,
                 "get_portfolio_news",
                 execution_id,
+                arguments={
+                    "user_id": user_id
+                },
             )
 
             # ------------------------------------------------
@@ -452,15 +478,24 @@ Additional requirements:
 # Main service function
 # ============================================================
 
-async def generate_portfolio_ai_analysis():
+async def generate_portfolio_ai_analysis(
+    user_id: int,
+):
     """
     Complete AI portfolio analysis workflow with
     validation and persistent audit logging.
+
+    Analysis is generated only for the specified
+    user's portfolio.
     """
 
-    execution_id = str(uuid.uuid4())
+    execution_id = str(
+        uuid.uuid4()
+    )
 
     db = SessionLocal()
+
+    execution_record = None
 
     try:
 
@@ -474,18 +509,22 @@ async def generate_portfolio_ai_analysis():
             model=GEMINI_MODEL,
             status="RUNNING",
             validation_status="PENDING",
-            input_source="MCP portfolio, analytics, market, and news",
+            input_source=(
+                "MCP portfolio, analytics, market, "
+                "and news"
+            ),
         )
 
         db.add(execution_record)
         db.commit()
 
         # ----------------------------------------------------
-        # Retrieve MCP context
+        # Retrieve MCP context for this user
         # ----------------------------------------------------
 
         context = await get_portfolio_context(
-            execution_id
+            execution_id,
+            user_id,
         )
 
         # ----------------------------------------------------
@@ -506,11 +545,15 @@ async def generate_portfolio_ai_analysis():
             execution_record.validation_status = "FAILED"
 
             execution_record.output_summary = {
-                "error": analysis.get("error")
+                "error": analysis.get(
+                    "error"
+                )
             }
 
             execution_record.validation_details = {
-                "details": analysis.get("details")
+                "details": analysis.get(
+                    "details"
+                )
             }
 
             db.commit()
@@ -526,7 +569,9 @@ async def generate_portfolio_ai_analysis():
             context,
         )
 
-        execution_record.validation_details = validation
+        execution_record.validation_details = (
+            validation
+        )
 
         if not validation["valid"]:
 
@@ -534,13 +579,17 @@ async def generate_portfolio_ai_analysis():
             execution_record.validation_status = "FAILED"
 
             execution_record.output_summary = {
-                "error": "AI analysis failed validation."
+                "error": (
+                    "AI analysis failed validation."
+                )
             }
 
             db.commit()
 
             return {
-                "error": "AI analysis failed validation.",
+                "error": (
+                    "AI analysis failed validation."
+                ),
                 "validation": validation,
             }
 
@@ -553,7 +602,9 @@ async def generate_portfolio_ai_analysis():
 
         execution_record.output_summary = {
             "portfolio_overview":
-                analysis.get("portfolio_overview"),
+                analysis.get(
+                    "portfolio_overview"
+                ),
 
             "observation_count":
                 len(
@@ -583,19 +634,23 @@ async def generate_portfolio_ai_analysis():
         # Try to persist failure state
         try:
 
-            execution_record.status = "FAILED"
-            execution_record.validation_status = "FAILED"
+            if execution_record is not None:
 
-            execution_record.validation_details = {
-                "error": str(exc)
-            }
+                execution_record.status = "FAILED"
+                execution_record.validation_status = "FAILED"
 
-            db.commit()
+                execution_record.validation_details = {
+                    "error": str(exc)
+                }
+
+                db.commit()
 
         except Exception:
+
             db.rollback()
 
         raise
 
     finally:
+
         db.close()

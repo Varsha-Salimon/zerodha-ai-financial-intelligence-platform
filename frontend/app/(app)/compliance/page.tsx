@@ -7,6 +7,8 @@ import {
   getMCPExecutions,
 } from "@/lib/api";
 
+import Pagination from "@/components/Pagination";
+
 interface AIExecution {
   execution_id: string;
   workflow: string;
@@ -14,6 +16,7 @@ interface AIExecution {
   status: string;
   validation_status: string;
   input_source: string;
+
   validation_details?: {
     valid?: boolean;
     schema_valid?: boolean;
@@ -65,7 +68,9 @@ function ValidationCard({
 }) {
   return (
     <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+
       <div className="flex items-center gap-3">
+
         <div
           className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
             passed
@@ -79,6 +84,7 @@ function ValidationCard({
         <span className="text-sm font-medium text-slate-700">
           {label}
         </span>
+
       </div>
 
       <span
@@ -90,6 +96,7 @@ function ValidationCard({
       >
         {passed ? "PASSED" : "FAILED"}
       </span>
+
     </div>
   );
 }
@@ -129,6 +136,11 @@ export default function CompliancePage() {
         }
 
         setMCPExecutions(mcpData);
+
+        // Start pagination from page 1
+        // whenever fresh data is loaded.
+        setCurrentPage(1);
+
       } catch (err) {
         setError(
           err instanceof Error
@@ -147,9 +159,11 @@ export default function CompliancePage() {
     return (
       <main className="min-h-screen bg-slate-50 p-8">
         <div className="mx-auto max-w-7xl">
+
           <p className="text-sm text-slate-500">
             Loading compliance data...
           </p>
+
         </div>
       </main>
     );
@@ -159,9 +173,11 @@ export default function CompliancePage() {
     return (
       <main className="min-h-screen bg-slate-50 p-8">
         <div className="mx-auto max-w-7xl">
+
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
           </div>
+
         </div>
       </main>
     );
@@ -173,6 +189,7 @@ export default function CompliancePage() {
         <div className="mx-auto max-w-7xl">
 
           <div className="mb-8">
+
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
               Compliance
             </p>
@@ -185,9 +202,11 @@ export default function CompliancePage() {
               Validation, governance, and audit status
               for AI-generated portfolio analysis.
             </p>
+
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+
             <h2 className="font-semibold text-slate-900">
               No AI execution records available
             </h2>
@@ -196,6 +215,7 @@ export default function CompliancePage() {
               Run an AI portfolio analysis to create
               governance and audit records.
             </p>
+
           </div>
 
         </div>
@@ -210,7 +230,7 @@ export default function CompliancePage() {
     validation?.issues ?? [];
 
   // =========================================================
-  // MCP pagination
+  // MCP PAGINATION
   // =========================================================
 
   const totalPages = Math.max(
@@ -221,8 +241,16 @@ export default function CompliancePage() {
     )
   );
 
+  // Protect against currentPage being
+  // greater than the available pages.
+  const safeCurrentPage = Math.min(
+    currentPage,
+    totalPages
+  );
+
   const startIndex =
-    (currentPage - 1) * ITEMS_PER_PAGE;
+    (safeCurrentPage - 1) *
+    ITEMS_PER_PAGE;
 
   const paginatedMCPExecutions =
     mcpExecutions.slice(
@@ -233,34 +261,26 @@ export default function CompliancePage() {
   const startRecord =
     mcpExecutions.length === 0
       ? 0
-      : (currentPage - 1) *
+      : (safeCurrentPage - 1) *
           ITEMS_PER_PAGE +
         1;
 
   const endRecord = Math.min(
-    currentPage * ITEMS_PER_PAGE,
+    safeCurrentPage * ITEMS_PER_PAGE,
     mcpExecutions.length
   );
 
-  const goToPreviousPage = () => {
-    setCurrentPage((page) =>
-      Math.max(1, page - 1)
-    );
-  };
-
-  const goToNextPage = () => {
-    setCurrentPage((page) =>
-      Math.min(totalPages, page + 1)
-    );
-  };
-
   return (
     <main className="min-h-screen bg-slate-50 p-8">
+
       <div className="mx-auto max-w-7xl">
 
-        {/* Header */}
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
         <div className="mb-8">
+
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
             Compliance
           </p>
@@ -273,15 +293,19 @@ export default function CompliancePage() {
             Validation, governance, and audit status
             for AI-generated portfolio analysis.
           </p>
+
         </div>
 
-        {/* Overall validation */}
+        {/* =================================================
+            OVERALL VALIDATION
+        ================================================= */}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
 
             <div>
+
               <p className="text-sm text-slate-500">
                 Overall Validation
               </p>
@@ -297,6 +321,7 @@ export default function CompliancePage() {
                 schema validity, grounding, and policy
                 compliance.
               </p>
+
             </div>
 
             <span
@@ -315,7 +340,9 @@ export default function CompliancePage() {
 
         </section>
 
-        {/* Validation checks */}
+        {/* =================================================
+            VALIDATION CHECKS
+        ================================================= */}
 
         <section className="mt-6">
 
@@ -350,13 +377,16 @@ export default function CompliancePage() {
 
         </section>
 
-        {/* AI execution details */}
+        {/* =================================================
+            AI EXECUTION DETAILS
+        ================================================= */}
 
         <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
             <div>
+
               <h2 className="text-lg font-semibold text-slate-900">
                 Latest AI Execution
               </h2>
@@ -365,6 +395,7 @@ export default function CompliancePage() {
                 Audit information for the latest AI
                 portfolio analysis workflow.
               </p>
+
             </div>
 
             <StatusBadge
@@ -376,6 +407,7 @@ export default function CompliancePage() {
           <div className="mt-6 grid gap-5 md:grid-cols-2">
 
             <div>
+
               <p className="text-xs uppercase tracking-wide text-slate-400">
                 Execution ID
               </p>
@@ -383,9 +415,11 @@ export default function CompliancePage() {
               <p className="mt-1 break-all text-sm font-medium text-slate-700">
                 {execution.execution_id}
               </p>
+
             </div>
 
             <div>
+
               <p className="text-xs uppercase tracking-wide text-slate-400">
                 Workflow
               </p>
@@ -393,9 +427,11 @@ export default function CompliancePage() {
               <p className="mt-1 text-sm font-medium text-slate-700">
                 {execution.workflow}
               </p>
+
             </div>
 
             <div>
+
               <p className="text-xs uppercase tracking-wide text-slate-400">
                 Model
               </p>
@@ -403,23 +439,29 @@ export default function CompliancePage() {
               <p className="mt-1 text-sm font-medium text-slate-700">
                 {execution.model}
               </p>
+
             </div>
 
             <div>
+
               <p className="text-xs uppercase tracking-wide text-slate-400">
                 Validation Status
               </p>
 
               <div className="mt-1">
+
                 <StatusBadge
                   status={
                     execution.validation_status
                   }
                 />
+
               </div>
+
             </div>
 
             <div className="md:col-span-2">
+
               <p className="text-xs uppercase tracking-wide text-slate-400">
                 Input Source
               </p>
@@ -427,13 +469,16 @@ export default function CompliancePage() {
               <p className="mt-1 text-sm font-medium text-slate-700">
                 {execution.input_source}
               </p>
+
             </div>
 
           </div>
 
         </section>
 
-        {/* Validation issues */}
+        {/* =================================================
+            VALIDATION ISSUES
+        ================================================= */}
 
         <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
@@ -446,6 +491,7 @@ export default function CompliancePage() {
           </p>
 
           {issues.length === 0 ? (
+
             <div className="mt-4 rounded-xl border border-green-100 bg-green-50 p-4">
 
               <p className="text-sm font-medium text-green-700">
@@ -458,26 +504,33 @@ export default function CompliancePage() {
               </p>
 
             </div>
+
           ) : (
+
             <ul className="mt-4 space-y-2">
 
               {issues.map(
                 (issue, index) => (
+
                   <li
                     key={index}
                     className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
                   >
                     {issue}
                   </li>
+
                 )
               )}
 
             </ul>
+
           )}
 
         </section>
 
-        {/* MCP audit */}
+        {/* =================================================
+            MCP AUDIT
+        ================================================= */}
 
         <section className="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
 
@@ -486,6 +539,7 @@ export default function CompliancePage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
               <div>
+
                 <h2 className="text-lg font-semibold text-slate-900">
                   MCP Execution Audit
                 </h2>
@@ -494,13 +548,16 @@ export default function CompliancePage() {
                   Read-only MCP tool executions used during
                   the AI analysis workflow.
                 </p>
+
               </div>
 
               {mcpExecutions.length > 0 && (
+
                 <span className="text-xs text-slate-500">
                   Showing {startRecord}–{endRecord} of{" "}
                   {mcpExecutions.length}
                 </span>
+
               )}
 
             </div>
@@ -508,11 +565,15 @@ export default function CompliancePage() {
           </div>
 
           {mcpExecutions.length === 0 ? (
+
             <div className="p-6 text-sm text-slate-500">
               No MCP execution records available.
             </div>
+
           ) : (
+
             <>
+
               <div className="overflow-x-auto">
 
                 <table className="w-full text-left text-sm">
@@ -545,6 +606,7 @@ export default function CompliancePage() {
 
                     {paginatedMCPExecutions.map(
                       (record, index) => (
+
                         <tr
                           key={`${record.execution_id}-${record.tool_name}-${index}`}
                           className="border-b border-slate-100 last:border-0"
@@ -555,16 +617,20 @@ export default function CompliancePage() {
                           </td>
 
                           <td className="px-6 py-4">
+
                             <StatusBadge
                               status={record.status}
                             />
+
                           </td>
 
                           <td className="px-6 py-4 text-slate-600">
+
                             {record.duration_ms.toFixed(
                               2
                             )}{" "}
                             ms
+
                           </td>
 
                           <td className="px-6 py-4 text-slate-600">
@@ -572,6 +638,7 @@ export default function CompliancePage() {
                           </td>
 
                         </tr>
+
                       )
                     )}
 
@@ -581,71 +648,25 @@ export default function CompliancePage() {
 
               </div>
 
-              {/* Pagination */}
+              {/* =================================================
+                  COMPACT PAGINATION
+              ================================================= */}
 
-              <div className="flex flex-col gap-4 border-t border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <Pagination
+                currentPage={safeCurrentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
 
-                <p className="text-xs text-slate-500">
-                  Page {currentPage} of{" "}
-                  {totalPages}
-                </p>
-
-                <div className="flex flex-wrap items-center gap-2">
-
-                  <button
-                    type="button"
-                    onClick={goToPreviousPage}
-                    disabled={
-                      currentPage === 1
-                    }
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    ← Previous
-                  </button>
-
-                  {Array.from(
-                    {
-                      length: totalPages,
-                    },
-                    (_, index) =>
-                      index + 1
-                  ).map((page) => (
-                    <button
-                      key={page}
-                      type="button"
-                      onClick={() =>
-                        setCurrentPage(page)
-                      }
-                      className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${
-                        currentPage === page
-                          ? "bg-blue-600 text-white"
-                          : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-
-                  <button
-                    type="button"
-                    onClick={goToNextPage}
-                    disabled={
-                      currentPage === totalPages
-                    }
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    Next →
-                  </button>
-
-                </div>
-
-              </div>
             </>
+
           )}
 
         </section>
 
-        {/* Governance explanation */}
+        {/* =================================================
+            GOVERNANCE EXPLANATION
+        ================================================= */}
 
         <section className="mt-8 rounded-2xl border border-blue-100 bg-blue-50 p-6">
 
@@ -700,7 +721,9 @@ export default function CompliancePage() {
 
         </section>
 
-        {/* Disclaimer */}
+        {/* =================================================
+            DISCLAIMER
+        ================================================= */}
 
         <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
 
@@ -715,6 +738,7 @@ export default function CompliancePage() {
         </div>
 
       </div>
+
     </main>
   );
 }

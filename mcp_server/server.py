@@ -51,7 +51,10 @@ def load_market_data():
         newline="",
         encoding="utf-8",
     ) as file:
-        return list(csv.DictReader(file))
+        return list(
+            csv.DictReader(file)
+        )
+
 
 def load_news_data():
     """
@@ -71,12 +74,18 @@ def load_news_data():
         newline="",
         encoding="utf-8",
     ) as file:
-        return list(csv.DictReader(file))
-    
-def get_relevant_news(portfolio, news):
+        return list(
+            csv.DictReader(file)
+        )
+
+
+def get_relevant_news(
+    portfolio,
+    news,
+):
     """
-    Return news only for stocks currently held
-    in the portfolio.
+    Return news only for stocks currently
+    held in the specified user's portfolio.
     """
 
     portfolio_stocks = {
@@ -87,20 +96,32 @@ def get_relevant_news(portfolio, news):
     relevant_news = [
         item
         for item in news
-        if item.get("Stock") in portfolio_stocks
+        if item.get("Stock")
+        in portfolio_stocks
     ]
 
     return relevant_news
 
+
+# ============================================================
+# Portfolio MCP tools
+# ============================================================
+
+
 @mcp.tool()
-def get_portfolio() -> str:
+def get_portfolio(
+    user_id: int,
+) -> str:
     """
-    Return the current portfolio holdings.
+    Return the current portfolio holdings
+    for the specified user.
 
     Read-only tool for the AI system.
     """
 
-    portfolio = get_portfolio_data()
+    portfolio = get_portfolio_data(
+        user_id
+    )
 
     return json.dumps(
         portfolio,
@@ -109,15 +130,21 @@ def get_portfolio() -> str:
 
 
 @mcp.tool()
-def get_portfolio_summary() -> str:
+def get_portfolio_summary(
+    user_id: int,
+) -> str:
     """
-    Return overall portfolio summary including
-    investment, current value, profit and return.
+    Return overall portfolio summary
+    for the specified user.
     """
 
-    portfolio = get_portfolio_data()
+    portfolio = get_portfolio_data(
+        user_id
+    )
 
-    summary = calculate_summary(portfolio)
+    summary = calculate_summary(
+        portfolio
+    )
 
     return json.dumps(
         summary,
@@ -126,12 +153,17 @@ def get_portfolio_summary() -> str:
 
 
 @mcp.tool()
-def get_portfolio_allocation() -> str:
+def get_portfolio_allocation(
+    user_id: int,
+) -> str:
     """
-    Return portfolio allocation by stock.
+    Return portfolio allocation by stock
+    for the specified user.
     """
 
-    portfolio = get_portfolio_data()
+    portfolio = get_portfolio_data(
+        user_id
+    )
 
     allocation = calculate_allocation(
         portfolio
@@ -144,12 +176,17 @@ def get_portfolio_allocation() -> str:
 
 
 @mcp.tool()
-def get_portfolio_risk() -> str:
+def get_portfolio_risk(
+    user_id: int,
+) -> str:
     """
-    Analyze portfolio concentration risk.
+    Analyze portfolio concentration risk
+    for the specified user.
     """
 
-    portfolio = get_portfolio_data()
+    portfolio = get_portfolio_data(
+        user_id
+    )
 
     risk = calculate_risk_analysis(
         portfolio
@@ -162,13 +199,17 @@ def get_portfolio_risk() -> str:
 
 
 @mcp.tool()
-def get_portfolio_performance() -> str:
+def get_portfolio_performance(
+    user_id: int,
+) -> str:
     """
     Return performance information for
-    each stock in the portfolio.
+    each stock in the specified user's portfolio.
     """
 
-    portfolio = get_portfolio_data()
+    portfolio = get_portfolio_data(
+        user_id
+    )
 
     performance = calculate_performance(
         portfolio
@@ -179,11 +220,14 @@ def get_portfolio_performance() -> str:
         indent=4,
     )
 
+
 @mcp.tool()
-def get_portfolio_analytics() -> str:
+def get_portfolio_analytics(
+    user_id: int,
+) -> str:
     """
     Return the complete deterministic portfolio
-    analytics package for AI reasoning.
+    analytics package for the specified user.
 
     Includes summary, allocation, risk,
     performance, contribution, sector exposure,
@@ -191,7 +235,10 @@ def get_portfolio_analytics() -> str:
     and data freshness.
     """
 
-    portfolio = get_portfolio_data()
+    portfolio = get_portfolio_data(
+        user_id
+    )
+
     market_data = load_market_data()
 
     analytics = {
@@ -215,19 +262,22 @@ def get_portfolio_analytics() -> str:
             portfolio
         ),
 
-        "sector_exposure": calculate_sector_exposure(
-            portfolio
-        ),
+        "sector_exposure":
+            calculate_sector_exposure(
+                portfolio
+            ),
 
-        "volatility": calculate_volatility(
-            portfolio,
-            market_data,
-        ),
+        "volatility":
+            calculate_volatility(
+                portfolio,
+                market_data,
+            ),
 
-        "drawdown": calculate_drawdown(
-            portfolio,
-            market_data,
-        ),
+        "drawdown":
+            calculate_drawdown(
+                portfolio,
+                market_data,
+            ),
 
         "benchmark_comparison":
             calculate_benchmark_comparison(
@@ -246,13 +296,20 @@ def get_portfolio_analytics() -> str:
         indent=4,
     )
 
+
+# ============================================================
+# Shared market data
+# ============================================================
+
+
 @mcp.tool()
 def get_market_data() -> str:
     """
-    Return current market information available
-    for portfolio holdings.
+    Return current market information
+    available in the controlled market dataset.
 
-    Read-only MCP tool.
+    Market data is shared and is not
+    user-specific.
     """
 
     market_data = load_market_data()
@@ -262,12 +319,14 @@ def get_market_data() -> str:
         indent=4,
     )
 
+
 @mcp.tool()
 def get_market_news() -> str:
     """
     Return available market/news context.
 
-    Read-only MCP tool for AI analysis.
+    News data is shared and is not
+    user-specific.
     """
 
     news = load_news_data()
@@ -277,15 +336,22 @@ def get_market_news() -> str:
         indent=4,
     )
 
+
 @mcp.tool()
-def get_portfolio_news() -> str:
+def get_portfolio_news(
+    user_id: int,
+) -> str:
     """
-    Return news relevant to the current portfolio holdings.
+    Return news relevant to the specified
+    user's portfolio holdings.
 
     Read-only MCP tool for AI analysis.
     """
 
-    portfolio = get_portfolio_data()
+    portfolio = get_portfolio_data(
+        user_id
+    )
+
     news = load_news_data()
 
     relevant_news = get_relevant_news(
@@ -297,6 +363,7 @@ def get_portfolio_news() -> str:
         relevant_news,
         indent=4,
     )
+
 
 if __name__ == "__main__":
     mcp.run()

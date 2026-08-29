@@ -6,6 +6,8 @@ from app.api.insights import router as insights_router
 from app.api.recommendations import router as recommendations_router
 from app.api.analytics import router as analytics_router
 from app.api.audit import router as audit_router
+from app.api.auth import router as auth_router
+from app.api.admin import router as admin_router
 
 from app.database.database import Base, engine
 from app.database import models
@@ -39,6 +41,11 @@ def home():
         "message": "Backend is running"
     }
 
+app.include_router(
+    auth_router,
+    prefix="/api/auth",
+    tags=["Authentication"],
+)
 
 app.include_router(
     portfolio_router,
@@ -69,4 +76,10 @@ app.include_router(
     audit_router,
     prefix="/api/audit",
     tags=["Audit"],
+)
+
+app.include_router(
+    admin_router,
+    prefix="/api/admin",
+    tags=["Administration"],
 )

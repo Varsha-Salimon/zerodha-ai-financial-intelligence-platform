@@ -1,6 +1,47 @@
-from sqlalchemy import Column, Integer, Float, String, Text, JSON
+from sqlalchemy import (
+    Column,
+    Integer,
+    Float,
+    String,
+    Text,
+    JSON,
+    ForeignKey,
+)
 
 from app.database.database import Base
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    name = Column(
+        String(100),
+        nullable=False,
+    )
+
+    email = Column(
+        String(255),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    password_hash = Column(
+        String(255),
+        nullable=False,
+    )
+
+    role = Column(
+        String(20),
+        nullable=False,
+        default="USER",
+    )
 
 
 class PortfolioHolding(Base):
@@ -9,6 +50,13 @@ class PortfolioHolding(Base):
     id = Column(
         Integer,
         primary_key=True,
+        index=True,
+    )
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False,
         index=True,
     )
 
@@ -31,10 +79,10 @@ class PortfolioHolding(Base):
         Float,
         nullable=False,
     )
-    
+
     sector = Column(
-    String(100),
-    nullable=True,
+        String(100),
+        nullable=True,
     )
 
 
@@ -44,6 +92,13 @@ class RecommendationRecord(Base):
     id = Column(
         Integer,
         primary_key=True,
+        index=True,
+    )
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False,
         index=True,
     )
 
@@ -92,7 +147,7 @@ class RecommendationRecord(Base):
         Text,
         nullable=False,
     )
-    
+
 class AIExecutionRecord(Base):
     __tablename__ = "ai_execution_records"
 

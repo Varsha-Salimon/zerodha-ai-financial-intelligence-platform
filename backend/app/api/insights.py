@@ -1,4 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+
+from app.auth.dependencies import get_current_user
+from app.database.models import User
 
 from app.schemas.insight_schema import Insight
 from app.schemas.ai_analysis_schema import AIAnalysis
@@ -29,11 +32,19 @@ router = APIRouter()
     "/",
     response_model=list[Insight],
 )
-def get_insights():
+def get_insights(
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
 
-    portfolio = get_portfolio_data()
+    portfolio = get_portfolio_data(
+        current_user.id
+    )
 
-    summary = get_portfolio_summary()
+    summary = get_portfolio_summary(
+        current_user.id
+    )
 
     risk = calculate_risk_analysis(
         portfolio
@@ -55,6 +66,12 @@ def get_insights():
     "/ai",
     response_model=AIAnalysis,
 )
-async def get_ai_analysis():
+async def get_ai_analysis(
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
 
-    return await generate_portfolio_ai_analysis()
+    return await generate_portfolio_ai_analysis(
+        current_user.id
+    )

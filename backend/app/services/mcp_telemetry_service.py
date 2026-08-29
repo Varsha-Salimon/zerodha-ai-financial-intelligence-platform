@@ -38,18 +38,27 @@ async def execute_mcp_tool(
     session,
     tool_name,
     execution_id,
+    arguments=None,
 ):
     """
     Execute an MCP tool while recording
     execution telemetry.
+
+    Arguments are passed to the MCP tool when
+    supplied. This allows portfolio-dependent
+    tools to operate on a specific user.
     """
 
     start_time = time.perf_counter()
 
     try:
 
+        if arguments is None:
+            arguments = {}
+
         result = await session.call_tool(
-            tool_name
+            tool_name,
+            arguments=arguments,
         )
 
         duration_ms = (
