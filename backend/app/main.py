@@ -8,6 +8,7 @@ from app.api.analytics import router as analytics_router
 from app.api.audit import router as audit_router
 from app.api.auth import router as auth_router
 from app.api.admin import router as admin_router
+from app.api.portfolio_upload import router as portfolio_upload_router
 
 from app.database.database import Base, engine
 from app.database import models
@@ -82,4 +83,10 @@ app.include_router(
     admin_router,
     prefix="/api/admin",
     tags=["Administration"],
+)
+
+app.include_router(
+    portfolio_upload_router,
+    prefix="/api/portfolio",
+    tags=["Portfolio Upload"],
 )

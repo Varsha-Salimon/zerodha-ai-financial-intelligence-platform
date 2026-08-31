@@ -6,6 +6,7 @@ import PageHeader from "@/components/PageHeader";
 import RecommendationCard from "@/components/RecommendationCard";
 
 import {
+  getPortfolio,
   getRecommendations,
   generateRecommendations,
   getAIAnalysis,
@@ -67,35 +68,122 @@ export default function InsightsPage() {
     useState("");
 
   // =========================================================
-  // Load existing recommendations
+  // Load recommendations for the current portfolio
   // =========================================================
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadRecommendations() {
       try {
         setLoading(true);
         setError("");
 
-        const data =
-          await getRecommendations();
+        /*
+         * Load both the current portfolio and the latest
+         * saved recommendations.
+         *
+         * We do NOT regenerate recommendations on every
+         * page refresh.
+         */
+        const [portfolio, savedRecommendations] =
+          await Promise.all([
+            getPortfolio(),
+            getRecommendations(),
+          ]);
 
-        setRecommendations(data);
+        if (cancelled) {
+          return;
+        }
+
+        const currentHoldingCount =
+          Array.isArray(portfolio)
+            ? portfolio.length
+            : 0;
+
+        /*
+         * The recommendation engine stores the number of
+         * holdings used during generation inside
+         * supporting_metrics.
+         *
+         * This allows us to determine whether the saved
+         * recommendation set belongs to the current
+         * portfolio.
+         */
+        const savedHoldingCount =
+          savedRecommendations.length > 0
+            ? Number(
+                savedRecommendations[0]
+                  ?.supporting_metrics
+                  ?.number_of_holdings ?? -1
+              )
+            : -1;
+
+        /*
+         * If there are saved recommendations and their
+         * portfolio holding count differs from the current
+         * portfolio, the recommendations are stale.
+         *
+         * Example:
+         *
+         * Saved recommendations = 4 holdings
+         * Current portfolio      = 6 holdings
+         *
+         * Therefore regenerate.
+         */
+        const recommendationsAreStale =
+          savedRecommendations.length > 0 &&
+          savedHoldingCount !== currentHoldingCount;
+
+        if (recommendationsAreStale) {
+          const freshRecommendations =
+            await generateRecommendations();
+
+          if (!cancelled) {
+            setRecommendations(
+              freshRecommendations
+            );
+          }
+
+          return;
+        }
+
+        /*
+         * No saved recommendations means the user can
+         * generate them manually from the empty state.
+         *
+         * If saved recommendations are current, simply
+         * display them without another generation.
+         */
+        if (!cancelled) {
+          setRecommendations(
+            savedRecommendations
+          );
+        }
       } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load recommendations"
-        );
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to load recommendations"
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadRecommendations();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // =========================================================
-  // Generate deterministic recommendations
+  // Generate deterministic recommendations manually
   // =========================================================
 
   const handleRegenerate =
@@ -383,9 +471,11 @@ export default function InsightsPage() {
                     key={index}
                     className="rounded-xl bg-slate-50 p-4"
                   >
+
                     <p className="text-sm leading-6 text-slate-600">
                       {item}
                     </p>
+
                   </div>
                 )
               )}

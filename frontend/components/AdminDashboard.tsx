@@ -53,14 +53,11 @@ interface ServiceHealth {
 
 
 interface SystemHealth {
-  overall_status: string;
-
-  services: {
-    backend: ServiceHealth;
-    database: ServiceHealth;
-    mcp: ServiceHealth;
-    governance: ServiceHealth;
-  };
+  overall: ServiceHealth;
+  backend: ServiceHealth;
+  database: ServiceHealth;
+  mcp: ServiceHealth;
+  governance: ServiceHealth;
 }
 
 
@@ -434,7 +431,7 @@ export default function AdminDashboard() {
      ======================================================= */
 
   const overallStatus =
-    health?.overall_status ??
+    health?.overall?.status ??
     "CHECKING";
 
 
@@ -758,7 +755,11 @@ export default function AdminDashboard() {
              FAILED MCP
           ------------------------------------------------- */}
 
-          <div className="rounded-xl border border-amber-100 bg-amber-50 p-5">
+          <div
+            className={`rounded-xl border p-5 ${(summary?.failed_mcp_executions ?? 0) > 0
+              ? "border-amber-100 bg-amber-50"
+              : "border-green-100 bg-green-50"}`}
+          >
 
             <div className="flex items-center justify-between">
 
@@ -766,14 +767,22 @@ export default function AdminDashboard() {
 
                 <AlertCircle
                   size={20}
-                  className="text-amber-600"
+                  className={(summary?.failed_mcp_executions ?? 0) > 0
+                    ? "text-amber-600"
+                    : "text-green-600"}
                 />
 
               </div>
 
 
-              <span className="text-xs font-semibold text-amber-600">
-                ATTENTION
+              <span
+                className={`text-xs font-semibold ${(summary?.failed_mcp_executions ?? 0) > 0
+                  ? "text-amber-600"
+                  : "text-green-600"}`}
+              >
+                {(summary?.failed_mcp_executions ?? 0) > 0
+                  ? "ATTENTION"
+                  : "HEALTHY"}
               </span>
 
             </div>
@@ -988,10 +997,7 @@ export default function AdminDashboard() {
             title="Backend API"
             description="FastAPI service"
             status={
-              health
-                ?.services
-                ?.backend
-                ?.status ??
+              health?.backend?.status ??
               "CHECKING"
             }
             icon={
@@ -1010,10 +1016,7 @@ export default function AdminDashboard() {
             title="Database"
             description="PostgreSQL"
             status={
-              health
-                ?.services
-                ?.database
-                ?.status ??
+              health?.database?.status ??
               "CHECKING"
             }
             icon={
@@ -1032,10 +1035,7 @@ export default function AdminDashboard() {
             title="MCP Server"
             description="Tool orchestration"
             status={
-              health
-                ?.services
-                ?.mcp
-                ?.status ??
+              health?.mcp?.status ??
               "CHECKING"
             }
             icon={
@@ -1054,10 +1054,7 @@ export default function AdminDashboard() {
             title="Governance"
             description="AI validation & audit"
             status={
-              health
-                ?.services
-                ?.governance
-                ?.status ??
+              health?.governance?.status ??
               "CHECKING"
             }
             icon={

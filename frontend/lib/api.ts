@@ -1,5 +1,12 @@
-const BASE_URL = "http://127.0.0.1:8000";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://127.0.0.1:8000";
 
+interface PortfolioUploadResponse {
+  message: string;
+  holdings_added: number;
+  stocks_added: string[];
+}
 /*
  * Get the JWT access token stored during login.
  *
@@ -42,11 +49,15 @@ async function authenticatedFetch(
   );
 
   /*
-   * Only set Content-Type when a request body exists.
-   * This keeps GET requests clean.
+   * Only set JSON Content-Type when a request body exists
+   * AND the body is not FormData.
+   *
+   * For FormData uploads, the browser must automatically
+   * set the multipart/form-data boundary.
    */
   if (
     options.body &&
+    !(options.body instanceof FormData) &&
     !headers.has("Content-Type")
   ) {
     headers.set(
@@ -166,6 +177,97 @@ export async function getPortfolioPerformance() {
   }
 
   return response.json();
+}
+
+
+/*
+ * Upload portfolio CSV.
+ *
+ * The backend is responsible for:
+ * - validating the CSV
+ * - checking duplicate holdings
+ * - associating holdings with the authenticated user
+ * - adding the holdings to the existing portfolio
+ */
+export async function uploadPortfolio(
+  file: File
+): Promise<PortfolioUploadResponse> {
+  const formData = new FormData();
+
+  formData.append(
+    "file",
+    file
+  );
+
+  const response =
+    await authenticatedFetch(
+      "/api/portfolio/upload",
+      {
+        method: "POST",
+        body: formData,
+        cache: "no-store",
+      }
+    );
+
+  let data: unknown = null;
+
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    let errorMessage =
+      "Failed to upload portfolio.";
+
+    let detail: unknown = undefined;
+
+    if (
+      data &&
+      typeof data === "object" &&
+      "detail" in data
+    ) {
+      detail = (
+        data as {
+          detail?: unknown;
+        }
+      ).detail;
+    }
+
+    if (
+      detail &&
+      typeof detail === "object" &&
+      "message" in detail
+    ) {
+      const message = (
+        detail as {
+          message?: unknown;
+        }
+      ).message;
+
+      if (typeof message === "string") {
+        errorMessage = message;
+      }
+    } else if (
+      typeof detail === "string"
+    ) {
+      errorMessage = detail;
+    }
+
+    const error =
+      new Error(errorMessage) as Error & {
+        status?: number;
+        detail?: unknown;
+      };
+
+    error.status = response.status;
+    error.detail = detail;
+
+    throw error;
+  }
+
+  return data as PortfolioUploadResponse;
 }
 
 
@@ -300,6 +402,7 @@ export async function getMCPExecutions() {
 
   return data.value ?? data;
 }
+
 
 /* =========================================================
    ADMIN DASHBOARD
