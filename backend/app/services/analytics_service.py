@@ -6,8 +6,8 @@ def calculate_summary(portfolio):
     best_performer = None
     worst_performer = None
 
-    best_profit = None
-    worst_profit = None
+    best_return = None
+    worst_return = None
 
     for stock in portfolio:
 
@@ -26,12 +26,27 @@ def calculate_summary(portfolio):
         total_investment += investment
         current_value += value
 
-        if best_profit is None or profit > best_profit:
-            best_profit = profit
+        if investment > 0:
+            return_percentage = (
+                profit / investment
+            ) * 100
+        else:
+            return_percentage = 0
+
+        # Best performer = highest return percentage
+        if (
+            best_return is None
+            or return_percentage > best_return
+        ):
+            best_return = return_percentage
             best_performer = stock["stock"]
 
-        if worst_profit is None or profit < worst_profit:
-            worst_profit = profit
+        # Worst performer = lowest return percentage
+        if (
+            worst_return is None
+            or return_percentage < worst_return
+        ):
+            worst_return = return_percentage
             worst_performer = stock["stock"]
 
     profit = current_value - total_investment
@@ -53,7 +68,6 @@ def calculate_summary(portfolio):
         "best_performer": best_performer,
         "worst_performer": worst_performer,
     }
-
 
 def calculate_allocation(portfolio):
 
