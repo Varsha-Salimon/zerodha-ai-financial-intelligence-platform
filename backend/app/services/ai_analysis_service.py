@@ -74,6 +74,7 @@ server_params = StdioServerParameters(
     args=[
         str(MCP_SERVER_PATH)
     ],
+    env=os.environ.copy(),
 )
 
 
