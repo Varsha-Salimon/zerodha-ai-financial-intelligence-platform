@@ -150,6 +150,7 @@ async def check_mcp_health():
         args=[
             str(MCP_SERVER_PATH)
         ],
+        env=os.environ.copy(),
     )
 
     try:
