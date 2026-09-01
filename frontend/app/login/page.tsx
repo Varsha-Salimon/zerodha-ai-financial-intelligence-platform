@@ -14,7 +14,8 @@ import {
 
 import { useAuth } from "@/context/AuthContext";
 
-const BASE_URL = "http://127.0.0.1:8000";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -721,86 +722,6 @@ export default function LoginPage() {
               </button>
 
             </form>
-
-
-            {/* =================================================
-                Demo accounts
-                ================================================= */}
-
-            <div
-              className="
-                mt-6
-                rounded-xl
-                border
-                border-blue-100
-                bg-blue-50/50
-                p-4
-                transition-all
-                duration-300
-                hover:-translate-y-0.5
-                hover:border-blue-200
-                hover:shadow-sm
-              "
-            >
-
-              <p
-                className="
-                  mb-3
-                  text-xs
-                  font-semibold
-                  uppercase
-                  tracking-wide
-                  text-blue-700
-                "
-              >
-                Demo access
-              </p>
-
-
-              <div className="space-y-2 text-xs">
-
-                <div className="flex items-center justify-between gap-3">
-
-                  <span className="font-medium text-slate-700">
-                    Varsha
-                  </span>
-
-                  <span className="text-slate-500">
-                    varsha@demo.com / varsha123
-                  </span>
-
-                </div>
-
-
-                <div className="flex items-center justify-between gap-3">
-
-                  <span className="font-medium text-slate-700">
-                    Rahul
-                  </span>
-
-                  <span className="text-slate-500">
-                    rahul@demo.com / rahul123
-                  </span>
-
-                </div>
-
-
-                <div className="flex items-center justify-between gap-3">
-
-                  <span className="font-medium text-slate-700">
-                    Admin
-                  </span>
-
-                  <span className="text-slate-500">
-                    admin@demo.com / admin123
-                  </span>
-
-                </div>
-
-              </div>
-
-            </div>
-
 
             {/* =================================================
                 Footer
