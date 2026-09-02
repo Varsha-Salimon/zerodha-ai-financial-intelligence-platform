@@ -13,6 +13,7 @@ import {
 } from "@/lib/api";
 
 interface Recommendation {
+  generation_id: string;
   type: string;
   title: string;
   recommendation: string;
@@ -67,10 +68,6 @@ export default function InsightsPage() {
   const [aiError, setAIError] =
     useState("");
 
-  // =========================================================
-  // Load recommendations for the current portfolio
-  // =========================================================
-
   useEffect(() => {
     let cancelled = false;
 
@@ -79,13 +76,6 @@ export default function InsightsPage() {
         setLoading(true);
         setError("");
 
-        /*
-         * Load both the current portfolio and the latest
-         * saved recommendations.
-         *
-         * We do NOT regenerate recommendations on every
-         * page refresh.
-         */
         const [portfolio, savedRecommendations] =
           await Promise.all([
             getPortfolio(),
@@ -101,15 +91,6 @@ export default function InsightsPage() {
             ? portfolio.length
             : 0;
 
-        /*
-         * The recommendation engine stores the number of
-         * holdings used during generation inside
-         * supporting_metrics.
-         *
-         * This allows us to determine whether the saved
-         * recommendation set belongs to the current
-         * portfolio.
-         */
         const savedHoldingCount =
           savedRecommendations.length > 0
             ? Number(
@@ -119,18 +100,6 @@ export default function InsightsPage() {
               )
             : -1;
 
-        /*
-         * If there are saved recommendations and their
-         * portfolio holding count differs from the current
-         * portfolio, the recommendations are stale.
-         *
-         * Example:
-         *
-         * Saved recommendations = 4 holdings
-         * Current portfolio      = 6 holdings
-         *
-         * Therefore regenerate.
-         */
         const recommendationsAreStale =
           savedRecommendations.length > 0 &&
           savedHoldingCount !== currentHoldingCount;
@@ -148,13 +117,6 @@ export default function InsightsPage() {
           return;
         }
 
-        /*
-         * No saved recommendations means the user can
-         * generate them manually from the empty state.
-         *
-         * If saved recommendations are current, simply
-         * display them without another generation.
-         */
         if (!cancelled) {
           setRecommendations(
             savedRecommendations
@@ -182,10 +144,6 @@ export default function InsightsPage() {
     };
   }, []);
 
-  // =========================================================
-  // Generate deterministic recommendations manually
-  // =========================================================
-
   const handleRegenerate =
     async () => {
       try {
@@ -206,10 +164,6 @@ export default function InsightsPage() {
         setGenerating(false);
       }
     };
-
-  // =========================================================
-  // Generate AI analysis
-  // =========================================================
 
   const handleGenerateAIAnalysis =
     async () => {
@@ -234,32 +188,19 @@ export default function InsightsPage() {
 
   return (
     <div className="space-y-8">
-
-      {/* =====================================================
-          Header
-      ===================================================== */}
-
       <PageHeader
         title="Portfolio Intelligence"
         subtitle="AI-generated portfolio analysis combined with explainable recommendations."
       />
 
-      {/* =====================================================
-          AI Analysis Banner
-      ===================================================== */}
-
       <section className="overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-indigo-50 shadow-sm">
-
         <div className="flex flex-col gap-6 p-6 lg:flex-row lg:items-center lg:justify-between">
-
           <div className="flex items-start gap-4">
-
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-sm font-bold text-white shadow-sm">
               AI
             </div>
 
             <div>
-
               <h2 className="text-lg font-semibold text-slate-900">
                 AI Portfolio Analysis
               </h2>
@@ -270,9 +211,7 @@ export default function InsightsPage() {
                 financial context. The generated response
                 is validated before being presented.
               </p>
-
             </div>
-
           </div>
 
           <button
@@ -285,14 +224,8 @@ export default function InsightsPage() {
               ? "Generating Analysis..."
               : "Generate AI Analysis"}
           </button>
-
         </div>
-
       </section>
-
-      {/* =====================================================
-          AI Error
-      ===================================================== */}
 
       {aiError && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -300,45 +233,27 @@ export default function InsightsPage() {
         </div>
       )}
 
-      {/* =====================================================
-          AI Analysis Result
-      ===================================================== */}
-
       {aiAnalysis && (
         <section className="space-y-6">
-
-          {/* Portfolio Overview */}
-
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
             <div className="mb-4">
-
               <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
                 AI Analysis
               </p>
-
               <h2 className="mt-1 text-xl font-semibold text-slate-900">
                 Portfolio Overview
               </h2>
-
             </div>
-
             <p className="text-sm leading-6 text-slate-600">
               {aiAnalysis.portfolio_overview}
             </p>
-
           </div>
 
-          {/* Key Observations */}
-
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
             <h2 className="text-lg font-semibold text-slate-900">
               Key Observations
             </h2>
-
             <div className="mt-4 space-y-3">
-
               {aiAnalysis.key_observations.map(
                 (observation, index) => (
                   <div
@@ -351,27 +266,18 @@ export default function InsightsPage() {
                   </div>
                 )
               )}
-
             </div>
-
           </div>
 
-          {/* Risk Analysis */}
-
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
               <div>
-
                 <h2 className="text-lg font-semibold text-slate-900">
                   Risk Analysis
                 </h2>
-
                 <p className="mt-1 text-sm text-slate-500">
                   Portfolio concentration and risk assessment.
                 </p>
-
               </div>
 
               <span
@@ -387,38 +293,28 @@ export default function InsightsPage() {
               >
                 {aiAnalysis.risk_analysis.risk_level}
               </span>
-
             </div>
 
             <div className="mt-4 rounded-xl bg-slate-50 p-4">
-
               <p className="text-sm leading-6 text-slate-600">
                 {aiAnalysis.risk_analysis.summary}
               </p>
-
             </div>
-
           </div>
 
-          {/* Performance Highlights */}
-
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
             <h2 className="text-lg font-semibold text-slate-900">
               Performance Highlights
             </h2>
 
             <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-
               {aiAnalysis.performance_highlights.map(
                 (item) => (
                   <div
                     key={item.stock}
                     className="rounded-xl border border-slate-200 bg-slate-50 p-4"
                   >
-
                     <div className="flex items-center justify-between">
-
                       <h3 className="font-semibold text-slate-900">
                         {item.stock}
                       </h3>
@@ -435,7 +331,6 @@ export default function InsightsPage() {
                           : ""}
                         {item.return_percentage.toFixed(2)}%
                       </span>
-
                     </div>
 
                     <p className="mt-2 text-sm text-slate-600">
@@ -446,63 +341,47 @@ export default function InsightsPage() {
                       Profit/Loss: ₹
                       {item.profit.toFixed(2)}
                     </p>
-
                   </div>
                 )
               )}
-
             </div>
-
           </div>
 
-          {/* Diversification */}
-
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
             <h2 className="text-lg font-semibold text-slate-900">
               Diversification Considerations
             </h2>
 
             <div className="mt-4 space-y-3">
-
               {aiAnalysis.diversification_considerations.map(
                 (item, index) => (
                   <div
                     key={index}
                     className="rounded-xl bg-slate-50 p-4"
                   >
-
                     <p className="text-sm leading-6 text-slate-600">
                       {item}
                     </p>
-
                   </div>
                 )
               )}
-
             </div>
-
           </div>
-
-          {/* Market Context */}
 
           {aiAnalysis.market_context &&
             aiAnalysis.market_context.length > 0 && (
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
                 <h2 className="text-lg font-semibold text-slate-900">
                   Market Context
                 </h2>
 
                 <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-
                   {aiAnalysis.market_context.map(
                     (item) => (
                       <div
                         key={`${item.stock}-${item.headline}`}
                         className="rounded-xl border border-slate-200 bg-slate-50 p-4"
                       >
-
                         <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">
                           {item.stock}
                         </p>
@@ -514,39 +393,24 @@ export default function InsightsPage() {
                         <p className="mt-2 text-sm leading-5 text-slate-600">
                           {item.observation}
                         </p>
-
                       </div>
                     )
                   )}
-
                 </div>
-
               </div>
             )}
 
-          {/* AI Disclaimer */}
-
           <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5">
-
             <p className="text-xs leading-5 text-amber-800">
               {aiAnalysis.disclaimer}
             </p>
-
           </div>
-
         </section>
       )}
 
-      {/* =====================================================
-          Recommendations
-      ===================================================== */}
-
       <section>
-
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-
           <div>
-
             <h2 className="text-xl font-semibold text-slate-900">
               Explainable Recommendations
             </h2>
@@ -555,7 +419,6 @@ export default function InsightsPage() {
               Deterministic recommendations generated from
               portfolio risk and performance analytics.
             </p>
-
           </div>
 
           {!loading && (
@@ -566,10 +429,7 @@ export default function InsightsPage() {
                 : "Recommendations"}
             </span>
           )}
-
         </div>
-
-        {/* Recommendation Error */}
 
         {error && (
           <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -577,20 +437,15 @@ export default function InsightsPage() {
           </div>
         )}
 
-        {/* Loading */}
-
         {loading && (
           <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm">
             Loading recommendations...
           </div>
         )}
 
-        {/* Empty State */}
-
         {!loading &&
           recommendations.length === 0 && (
             <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-
               <h3 className="font-semibold text-slate-900">
                 No recommendations available
               </h3>
@@ -610,34 +465,26 @@ export default function InsightsPage() {
                   ? "Regenerating..."
                   : "Generate Recommendations"}
               </button>
-
             </div>
           )}
-
-        {/* Recommendation Cards */}
 
         {!loading &&
           recommendations.length > 0 && (
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-
               {recommendations.map(
                 (recommendation, index) => (
                   <RecommendationCard
-                    key={`${recommendation.type}-${index}`}
+                    key={`${recommendation.type}-${recommendation.generation_id}-${index}`}
                     recommendation={recommendation}
                   />
                 )
               )}
-
             </div>
           )}
-
-        {/* Regenerate */}
 
         {!loading &&
           recommendations.length > 0 && (
             <div className="mt-5 flex justify-end">
-
               <button
                 type="button"
                 onClick={handleRegenerate}
@@ -648,20 +495,12 @@ export default function InsightsPage() {
                   ? "Regenerating..."
                   : "Regenerate Recommendations"}
               </button>
-
             </div>
           )}
-
       </section>
 
-      {/* =====================================================
-          How the system works
-      ===================================================== */}
-
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
         <div className="mb-5">
-
           <h2 className="text-lg font-semibold text-slate-900">
             How portfolio intelligence works
           </h2>
@@ -671,13 +510,10 @@ export default function InsightsPage() {
             work together to provide explainable portfolio
             intelligence.
           </p>
-
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-
           <div className="rounded-xl bg-slate-50 p-4">
-
             <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
               1
             </div>
@@ -691,65 +527,40 @@ export default function InsightsPage() {
               PostgreSQL and evaluated by deterministic
               analytics.
             </p>
-
           </div>
 
           <div className="rounded-xl bg-slate-50 p-4">
-
             <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
               2
             </div>
 
             <h3 className="font-semibold text-slate-900">
-              Interpret
+              Enrich
             </h3>
 
             <p className="mt-1 text-sm leading-5 text-slate-500">
-              The AI workflow receives controlled portfolio
-              context through the MCP layer and generates
-              structured analysis.
+              The Portfolio Agent retrieves approved
+              portfolio, analytics, market, and news context
+              through MCP.
             </p>
-
           </div>
 
           <div className="rounded-xl bg-slate-50 p-4">
-
             <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
               3
             </div>
 
             <h3 className="font-semibold text-slate-900">
-              Validate & Review
+              Explain
             </h3>
 
             <p className="mt-1 text-sm leading-5 text-slate-500">
-              AI output is validated, while deterministic
-              recommendations provide additional
-              explainable portfolio considerations.
+              Gemini interprets the grounded context and the
+              result is validated before it is presented.
             </p>
-
           </div>
-
         </div>
-
       </section>
-
-      {/* =====================================================
-          Final Disclaimer
-      ===================================================== */}
-
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-
-        <p className="text-xs leading-5 text-slate-500">
-          AI analysis and recommendations are generated
-          from the portfolio data and analytics available
-          to the application. They are provided for
-          informational purposes only and do not constitute
-          financial, investment, or trading advice.
-        </p>
-
-      </div>
-
     </div>
   );
 }
