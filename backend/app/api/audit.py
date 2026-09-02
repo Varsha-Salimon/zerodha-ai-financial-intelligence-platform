@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.auth.dependencies import require_admin
 from app.database.database import SessionLocal
 from app.database.models import (
     AIExecutionRecord,
@@ -12,10 +13,14 @@ router = APIRouter()
 
 
 @router.get("/executions")
-def get_ai_executions():
+def get_ai_executions(
+    admin=Depends(require_admin),
+):
     """
     Return recent AI execution records for
     Operations and Compliance monitoring.
+
+    Audit information is restricted to administrators.
     """
 
     db: Session = SessionLocal()
@@ -55,10 +60,14 @@ def get_ai_executions():
 
 
 @router.get("/mcp-executions")
-def get_mcp_executions():
+def get_mcp_executions(
+    admin=Depends(require_admin),
+):
     """
     Return recent MCP tool execution records
     for Operations monitoring.
+
+    Audit information is restricted to administrators.
     """
 
     db: Session = SessionLocal()
