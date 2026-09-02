@@ -1,332 +1,306 @@
 # Zerodha AI Financial Intelligence Platform
 
-> **AI-powered portfolio analysis, explainable insights, risk intelligence, and governed recommendations**
+> **AI-powered portfolio intelligence with deterministic analytics, MCP-based data access, explainable insights, and governed recommendations.**
 
-The Zerodha AI Financial Intelligence Platform is a full-stack financial intelligence prototype designed to help investors understand portfolio performance, allocation, concentration, risk, and market context through a controlled AI workflow.
+The **Zerodha AI Financial Intelligence Platform** is a full-stack financial intelligence application that helps investors understand portfolio performance, allocation, concentration, risk, and relevant market context through a controlled AI workflow.
 
-The platform combines **deterministic financial analytics** with **MCP-based tool access**, **Google Gemini**, structured AI outputs, validation, recommendation rules, authentication, and audit telemetry.
+The platform combines **Next.js, FastAPI, PostgreSQL, deterministic financial analytics, Model Context Protocol (MCP), Google Gemini, structured output validation, recommendation rules, JWT authentication, role-based access control, and audit telemetry** into a single application.
 
----
-
-## Project Overview
-
-Traditional portfolio dashboards are good at showing numbers, but investors still need help understanding what those numbers mean. This project adds an intelligence layer on top of portfolio data so that users can move from raw metrics to contextual, explainable insights.
-
-The system follows this high-level flow:
-
-```text
-Portfolio Input
-      ↓
-FastAPI Backend
-      ↓
-Deterministic Analytics
-      ↓
-MCP Tool Layer
-      ↓
-Portfolio Agent / AI Workflow
-      ↓
-Google Gemini
-      ↓
-Structured AI Output
-      ↓
-Schema + Grounding + Policy Validation
-      ↓
-Recommendations + Audit Telemetry
-      ↓
-Next.js Dashboard
-```
-
-The project is intentionally a **controlled/limited agentic AI workflow**, not a fully autonomous trading system. The AI interprets supplied, structured financial context and does not execute trades.
+> **Project scope:** This is a portfolio-intelligence prototype using sample portfolio, market, and news data. It is not a trading or order-execution system, and its recommendations are informational rather than financial advice.
 
 ---
 
-## Business Problem
+## Why This Project
 
-Investors often have access to portfolio values, profit/loss, holdings, and market information, but several questions still require manual interpretation:
+Traditional portfolio dashboards are effective at displaying numbers, but investors often need help answering the next question: **what do these numbers mean?**
 
-- Which holdings are driving portfolio performance?
-- Is the portfolio overly concentrated?
-- How diversified is the current allocation?
-- Which risk indicators require attention?
-- What market or news context may be relevant?
-- Can AI explain portfolio information without inventing financial facts?
+This project adds an intelligence layer that connects deterministic portfolio analytics with contextual AI explanations. The design deliberately separates **financial facts** from **AI interpretation** so that the language model is not responsible for calculating the underlying portfolio metrics.
 
-A financial AI system also needs stronger controls than a general-purpose chatbot because unsupported numbers, hallucinated claims, or overly directive trading language can reduce trust and create compliance concerns.
+The system is designed around four principles:
 
----
-
-## Product Goal
-
-The goal is to provide a **trustworthy portfolio intelligence layer** that:
-
-1. Calculates important financial metrics deterministically.
-2. Retrieves approved portfolio, market, analytics, and news context through controlled MCP tools.
-3. Uses Gemini to interpret verified context and generate structured explanations.
-4. Validates AI output before it reaches the user.
-5. Provides explainable recommendation signals with supporting metrics and disclaimers.
-6. Gives operations and compliance users visibility into AI/MCP executions and validation status.
+- **Grounded:** AI receives structured application data rather than inventing portfolio facts.
+- **Explainable:** insights and recommendation signals include supporting context and rationale.
+- **Controlled:** MCP exposes explicit tools instead of giving the AI unrestricted application access.
+- **Governed:** validation, authentication, role separation, disclaimers, and execution telemetry are built into the workflow.
 
 ---
 
-## Key Features
+## Product Capabilities
 
 ### Investor Experience
 
-- Portfolio overview and KPIs
-- Holdings table with investment, current value, and profit/loss
-- Portfolio allocation analysis
-- Performance analysis
-- Risk and concentration analysis
-- Sector exposure
-- Stock contribution analysis
-- AI-generated portfolio insights
-- Explainable recommendation cards
-- Portfolio CSV upload
-- User-specific portfolio data
+- Secure user login with JWT authentication.
+- User-specific portfolio data and holdings.
+- Portfolio overview with investment, current value, profit/loss, and return metrics.
+- Portfolio allocation and sector exposure analysis.
+- Risk and concentration analysis.
+- Performance and stock-contribution analysis.
+- Volatility, drawdown, and benchmark comparison metrics.
+- AI-generated portfolio insights.
+- Explainable recommendation cards with confidence and supporting metrics.
+- Portfolio CSV upload.
+- User settings and account experience.
 
-### AI and Governance
+### AI and Analytics
 
-- Controlled Portfolio Agent workflow
-- MCP-based structured tool access
-- Google Gemini integration
-- Structured AI response schema
-- Deterministic analytics before AI interpretation
-- Grounding validation
-- Risk consistency validation
-- Policy/prohibited-language validation
-- Confidence levels
-- Financial-information disclaimer
-- AI execution audit records
-- MCP execution telemetry
+- Controlled **Portfolio Agent** workflow.
+- Deterministic analytics before AI interpretation.
+- MCP tools for portfolio, analytics, market, and news context.
+- Google Gemini integration.
+- Structured AI response parsing.
+- Schema validation.
+- Grounding and financial-fact consistency checks.
+- Risk consistency checks.
+- Prohibited-language/policy checks.
+- Confidence levels and informational disclaimer.
+- AI and MCP execution telemetry.
 
-### Internal Operations
+### Operations and Governance
 
-- ADMIN-only dashboard
-- User counts
-- AI execution statistics
-- MCP execution statistics
-- Recommendation counts
-- Database health
-- Backend health
-- MCP health and tool discovery
-- Governance/validation status
-- Operations monitoring
-- Compliance review surface
-
-### Security
-
-- Password hashing with bcrypt
-- JWT authentication
-- Token expiration
-- Role-based access control
-- USER and ADMIN separation
-- User-scoped portfolio queries
-- Protected administrative endpoints
-- Backend-only secrets
-- CORS configuration through environment variables
+- Separate USER and ADMIN experiences.
+- ADMIN-only operations and compliance surfaces.
+- User, AI execution, MCP execution, and recommendation statistics.
+- Backend and database health checks.
+- MCP initialization and tool-discovery health checks.
+- Governance/validation status visibility.
+- Reviewable AI/MCP execution records.
+- Protected audit endpoints.
 
 ---
 
-## Product Workflow
+## Architecture
 
-```mermaid
-flowchart LR
-    A[Portfolio Input] --> B[FastAPI Backend]
-    B --> C[Portfolio Services]
-    C --> D[Deterministic Analytics]
-    D --> E[MCP Server]
-    E --> F[Portfolio Agent]
-    F --> G[Google Gemini]
-    G --> H[Structured AI Output]
-    H --> I[Validation]
-    I --> J[Recommendations / Insights]
-    J --> K[Next.js Dashboard]
-    I --> L[Audit Telemetry]
-```
-
----
-
-## System Architecture
-
-```mermaid
-flowchart TB
-    U[Investor / Admin]
-    FE[Next.js + React + Tailwind]
-    API[FastAPI REST API]
-    DB[(PostgreSQL)]
-    AN[Analytics Engine]
-    MCP[MCP Server]
-    AG[Portfolio Agent / AI Workflow]
-    GEM[Google Gemini]
-    VAL[Schema + Grounding + Policy Validation]
-    AUD[AI + MCP Audit Records]
-
-    U --> FE
-    FE --> API
-    API --> DB
-    API --> AN
-    API --> AG
-    AG --> MCP
-    MCP --> AN
-    MCP --> DB
-    AG --> GEM
-    GEM --> VAL
-    AN --> VAL
-    VAL --> API
-    API --> FE
-    AG --> AUD
-    MCP --> AUD
-    VAL --> AUD
+```text
+┌──────────────────────────────┐
+│       Next.js Frontend       │
+│  React + TypeScript +        │
+│  Tailwind CSS                │
+└──────────────┬───────────────┘
+               │ REST / JWT
+               ▼
+┌──────────────────────────────┐
+│        FastAPI Backend       │
+│ Auth • APIs • Orchestration  │
+└───────┬──────────────┬───────┘
+        │              │
+        ▼              ▼
+┌──────────────┐  ┌──────────────────┐
+│ PostgreSQL   │  │ Analytics Engine │
+│ Users        │  │ Allocation       │
+│ Holdings     │  │ Risk             │
+│ AI Records   │  │ Performance      │
+│ MCP Records  │  │ Contribution     │
+│ Recommends   │  │ Sector/Benchmark │
+└──────────────┘  └────────┬─────────┘
+                           │
+                           ▼
+                  ┌──────────────────┐
+                  │    MCP Server    │
+                  │ Governed Tools   │
+                  └────────┬─────────┘
+                           │
+                           ▼
+                  ┌──────────────────┐
+                  │  Portfolio Agent │
+                  │ Context Assembly │
+                  └────────┬─────────┘
+                           │
+                           ▼
+                  ┌──────────────────┐
+                  │  Google Gemini   │
+                  │ AI Interpretation │
+                  └────────┬─────────┘
+                           │
+                           ▼
+                  ┌──────────────────┐
+                  │    Validation    │
+                  │ Schema • Ground  │
+                  │ Risk • Policy    │
+                  └────────┬─────────┘
+                           │
+                           ▼
+                  ┌──────────────────┐
+                  │ Insights /       │
+                  │ Recommendations  │
+                  │ + Audit Records  │
+                  └──────────────────┘
 ```
 
 ### Architecture Layers
 
 | Layer | Responsibility |
 |---|---|
-| Frontend | Investor and internal dashboard experience |
-| Backend | REST APIs, authentication, business logic, orchestration |
-| Database | Users, holdings, recommendations, AI/MCP execution records |
-| Analytics | Deterministic portfolio, performance, allocation, risk calculations |
-| MCP | Governed access to portfolio, analytics, market and news tools |
-| AI Workflow | Coordinates context retrieval and Gemini analysis |
-| Gemini | Interprets verified structured context |
-| Validation | Schema, grounding, risk and policy checks |
-| Audit | Records AI/MCP execution and validation telemetry |
+| Frontend | Investor dashboard, AI insights, portfolio views, settings, and admin surfaces |
+| Backend | REST APIs, authentication, authorization, orchestration, business logic |
+| Database | Users, holdings, recommendations, AI execution records, MCP execution records |
+| Analytics | Deterministic portfolio, allocation, performance, risk, sector, contribution, volatility, drawdown, and benchmark calculations |
+| MCP | Controlled access to explicit portfolio, analytics, market, and news tools |
+| Portfolio Agent | Coordinates context retrieval and AI analysis rather than executing trades |
+| Gemini | Interprets grounded structured context and produces an explanation |
+| Validation | Checks schema, supported facts, risk consistency, and prohibited language |
+| Audit | Persists AI/MCP execution telemetry for operational visibility |
 
 ---
 
-## AI Workflow
+## End-to-End AI Workflow
 
-The project uses a **controlled agentic AI architecture**.
+```text
+1. User requests portfolio intelligence
+                 ↓
+2. FastAPI authenticates the user
+                 ↓
+3. Portfolio and deterministic analytics are assembled
+                 ↓
+4. Portfolio Agent requests approved MCP tools
+                 ↓
+5. MCP returns structured portfolio / analytics / market / news context
+                 ↓
+6. Context is supplied to Google Gemini
+                 ↓
+7. Gemini returns structured insight content
+                 ↓
+8. Validation checks schema, grounding, risk consistency and policy rules
+                 ↓
+9. Validated insight/recommendation is presented to the user
+                 ↓
+10. AI and MCP execution telemetry is persisted for operations/compliance
+```
 
-### Step 1 — Portfolio Context
+### Controlled Agentic Design
 
-The authenticated user requests portfolio intelligence from the frontend.
+The application uses a **controlled agentic workflow**, with a single Portfolio Agent coordinating the retrieval and interpretation process. It is intentionally **not** a multi-agent trading system.
 
-### Step 2 — Backend Orchestration
-
-FastAPI identifies the authenticated user and retrieves the user's portfolio context.
-
-### Step 3 — Deterministic Analytics
-
-The analytics layer calculates financial metrics such as:
-
-- investment
-- current value
-- profit/loss
-- return percentage
-- allocation
-- concentration
-- sector exposure
-- volatility
-- drawdown
-- benchmark comparison
-- stock contribution
-
-### Step 4 — MCP Tool Access
-
-The Portfolio Agent communicates with the MCP server and uses approved tools to obtain structured context such as portfolio information, portfolio analytics, market data, and portfolio-relevant news.
-
-### Step 5 — Gemini Analysis
-
-The structured context is passed to Google Gemini. The prompt instructs the model to use only the supplied information and avoid unsupported financial claims or guaranteed returns.
-
-### Step 6 — Structured Output
-
-The AI response is parsed into the application's expected structured schema.
-
-### Step 7 — Validation
-
-The output is checked for:
-
-- expected schema
-- supported portfolio facts
-- return/profit consistency
-- risk consistency
-- prohibited or overly directive trading language
-- disclaimer requirements
-
-### Step 8 — Presentation and Audit
-
-Only the validated result is presented through the dashboard, while workflow and validation telemetry are persisted for operations/compliance visibility.
+The agent does not place orders or independently act on the user's brokerage account. Its role is to retrieve approved context, invoke the AI interpretation step, and pass the result through application-level validation before presentation.
 
 ---
 
-## Responsible AI Approach
+## Deterministic Analytics
 
-The platform is designed around the principle:
+Financial calculations are performed by the application rather than delegated to the language model.
 
-> **AI generates interpretation; deterministic systems verify financial facts.**
+The analytics layer includes:
 
-The application does not treat Gemini as the source of truth for portfolio calculations. Core metrics are calculated programmatically first and supplied as grounded context.
+- Total investment.
+- Current portfolio value.
+- Profit/loss.
+- Return percentage.
+- Portfolio allocation.
+- Concentration indicators.
+- Sector exposure.
+- Stock-level contribution to portfolio performance.
+- Performance analysis.
+- Volatility.
+- Drawdown.
+- Benchmark comparison.
+- Data freshness/context metadata.
 
-Recommendations are phrased as review/monitoring signals rather than guaranteed outcomes or autonomous trade instructions. The application also includes an informational disclaimer.
-
----
-
-## Tools and Technologies
-
-### Frontend
-
-- Next.js 16
-- React 19
-- TypeScript
-- Tailwind CSS
-- Lucide React
-
-### Backend
-
-- Python
-- FastAPI
-- REST APIs
-- Pydantic
-
-### Database
-
-- PostgreSQL
-- SQLAlchemy
-
-### AI
-
-- Google Gemini API
-- Controlled Portfolio Agent workflow
-- Structured output validation
-
-### AI Integration
-
-- Model Context Protocol (MCP)
-- MCP server with portfolio, analytics, market and news tools
-
-### Security
-
-- bcrypt
-- JWT / Bearer authentication
-- Role-based access control
-
-### Deployment
-
-- Frontend: Render
-- Backend: Render
-- Database: PostgreSQL
+This separation allows the AI layer to focus on **explaining verified metrics** instead of generating the metrics itself.
 
 ---
 
-## Data Sources Used
+## MCP Integration
+
+The Model Context Protocol layer provides explicit tools that the AI workflow can request.
+
+Current tools include:
+
+```text
+get_portfolio
+get_portfolio_summary
+get_portfolio_allocation
+get_portfolio_risk
+get_portfolio_performance
+get_portfolio_analytics
+get_market_data
+get_market_news
+get_portfolio_news
+```
+
+MCP is used as a governed tool boundary between the Portfolio Agent and application data/services. Tool execution is recorded for operational visibility.
+
+Detailed MCP documentation is maintained in [`docs/mcp.md`](docs/mcp.md).
+
+---
+
+## AI Safety and Governance
+
+Financial AI requires stronger controls than a general-purpose conversational interface. This project therefore follows a **"calculate first, interpret second, validate before display"** approach.
+
+### Grounding
+
+The AI workflow receives structured context produced by the application and MCP tools. The system prompt instructs Gemini to rely only on the supplied context and avoid unsupported claims.
+
+### Validation
+
+AI output is checked for:
+
+- Required structured fields.
+- Supported portfolio facts.
+- Profit/return consistency.
+- Risk consistency.
+- Prohibited or overly directive trading language.
+- Required disclaimer behavior.
+
+### Recommendation Safety
+
+Recommendations are expressed as review, monitoring, or portfolio-management signals rather than guaranteed outcomes or autonomous trade instructions.
+
+### Human Review Readiness
+
+The architecture preserves execution and validation records so that policy-sensitive outputs can be reviewed through the administrative operations/compliance surfaces.
+
+---
+
+## Authentication and Security
+
+The application implements:
+
+- Password hashing using bcrypt.
+- JWT access tokens with expiration.
+- Bearer-token authentication for protected API requests.
+- Role-based access control with USER and ADMIN roles.
+- User-scoped portfolio and recommendation queries.
+- ADMIN-only operations and audit endpoints.
+- Backend-only storage of Gemini and database secrets.
+- Environment-based CORS configuration.
+
+The security model is designed to prevent one authenticated user from retrieving another user's portfolio data through normal application APIs.
+
+> This project demonstrates application-level authentication and authorization. It should not be described as a production brokerage security system.
+
+---
+
+## Data and Demo Sources
 
 The current demonstration uses project/sample data rather than a live brokerage connection.
 
-Available sample data includes:
+| File | Purpose |
+|---|---|
+| `data/portfolio.json` | Portfolio/holding data used by the application |
+| `data/sample_portfolio.csv` | Sample portfolio upload data |
+| `data/sample_market_data.csv` | Sample market and benchmark context |
+| `data/sample_news.csv` | Sample market/news context |
 
-- `data/portfolio.json` — portfolio/holding data
-- `data/sample_portfolio.csv` — sample portfolio upload data
-- `data/sample_market_data.csv` — sample market/benchmark data
-- `data/sample_news.csv` — sample market/news context
+No live broker credentials or trading execution are required for the demonstration.
 
-The application is designed so that deterministic analytics operate on structured portfolio data before AI interpretation.
+### Future Data Integrations
 
-### Future Data Sources
+The architecture can be extended with live market feeds and brokerage APIs while retaining the same separation between retrieval, deterministic analytics, AI interpretation, and validation.
 
-The specification identifies live market data and brokerage APIs as future extensions. A production version could integrate live market feeds and broker APIs while keeping credentials server-side.
+---
+
+## Technology Stack
+
+| Area | Technology |
+|---|---|
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS |
+| Backend | Python, FastAPI, Pydantic |
+| Database | PostgreSQL, SQLAlchemy |
+| AI | Google Gemini API |
+| AI Integration | Model Context Protocol (MCP), Portfolio Agent workflow |
+| Authentication | bcrypt, JWT, role-based access control |
+| API Documentation | FastAPI / OpenAPI / Swagger UI |
+| Deployment | Render |
 
 ---
 
@@ -335,54 +309,50 @@ The specification identifies live market data and brokerage APIs as future exten
 ```text
 zerodha-ai-financial-intelligence-platform/
 │
-├── ai_workflows/          # AI/Portfolio Agent workflow code
+├── ai_workflows/          # AI workflow / Portfolio Agent code
 ├── backend/               # FastAPI backend
 │   └── app/
 │       ├── api/           # REST API routers
 │       ├── auth/          # JWT and password security
-│       ├── database/      # SQLAlchemy models/database
+│       ├── database/      # Database configuration and models
 │       ├── schemas/       # Pydantic schemas
-│       ├── services/      # Business logic and analytics integration
-│       └── main.py        # FastAPI application entry point
+│       ├── services/      # Business logic, analytics, AI, validation
+│       └── main.py        # FastAPI entry point
 │
 ├── data/                  # Sample portfolio, market and news data
-├── deployment/            # Deployment-related files/documentation
-├── docs/                  # Project documentation
+├── deployment/            # Deployment-related resources
+├── docs/                  # Architecture, API, MCP and demo documentation
+│   └── screenshots/       # Application screenshots
 ├── frontend/              # Next.js application
-│   ├── app/
-│   ├── components/
-│   ├── context/
-│   └── lib/
-│
-├── mcp_server/            # MCP server and tools
-├── tests/                 # Test suite / testing evidence
+│   ├── app/               # Routes and pages
+│   ├── components/        # Reusable UI components
+│   ├── context/           # Authentication/application context
+│   └── lib/               # API client and frontend utilities
+├── mcp_server/            # MCP server and tool definitions
+├── requirements.txt       # Python dependencies
 ├── .env.example           # Environment variable template
-├── requirements.txt       # Backend Python dependencies
-└── README.md              # Project documentation
+└── README.md              # Project overview and setup guide
 ```
 
 ---
 
-## How to Run Locally
+## Local Setup
 
 ### Prerequisites
 
-Install:
-
 - Python 3.12+
-- Node.js
-- npm or Yarn
+- Node.js and npm
 - PostgreSQL
 - Git
 
-### 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Varsha-Salimon/zerodha-ai-financial-intelligence-platform.git
 cd zerodha-ai-financial-intelligence-platform
 ```
 
-### 2. Backend Setup
+### 2. Backend environment
 
 ```bash
 cd backend
@@ -401,47 +371,47 @@ macOS/Linux:
 source venv/bin/activate
 ```
 
-Install dependencies:
+Install Python dependencies:
 
 ```bash
 pip install -r ../requirements.txt
 ```
 
-### 3. Configure Backend Environment
+### 3. Configure environment variables
 
-Create a `.env` file using the root `.env.example` as a reference.
+Create a `.env` file using the root `.env.example` as the reference.
 
-Configure PostgreSQL and the required AI/JWT settings before starting the backend.
+Configure the PostgreSQL database, Gemini API key, JWT secret, and frontend origin before starting the backend.
 
-### 4. Initialize / Seed the Database
+### 4. Start the backend
 
-Run the project's database migration/seed workflow as documented in `backend/`.
-
-The demonstration environment contains USER and ADMIN roles and sample portfolio data.
-
-### 5. Start the Backend
-
-From the project root/backend environment:
+From the `backend` directory:
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-Backend default local address:
+Backend:
 
 ```text
 http://127.0.0.1:8000
 ```
 
-FastAPI automatically provides interactive OpenAPI/Swagger documentation at:
+Swagger UI:
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-### 6. Start the Frontend
+OpenAPI schema:
 
-Open another terminal:
+```text
+http://127.0.0.1:8000/openapi.json
+```
+
+### 5. Start the frontend
+
+Open a second terminal:
 
 ```bash
 cd frontend
@@ -449,19 +419,23 @@ npm install
 npm run dev
 ```
 
-Frontend default address:
+Frontend:
 
 ```text
 http://localhost:3000
 ```
 
-Set `NEXT_PUBLIC_API_URL` to the local backend URL when running locally.
+Set `NEXT_PUBLIC_API_URL` to the backend URL used by the frontend.
+
+### Database
+
+The backend uses PostgreSQL through SQLAlchemy. Database initialization and seed behavior are implemented in the backend application; deployment-specific database configuration is supplied through environment variables.
 
 ---
 
 ## Environment Variables
 
-Never commit real secrets to GitHub.
+Do not commit real credentials to the repository.
 
 | Variable | Purpose |
 |---|---|
@@ -469,10 +443,10 @@ Never commit real secrets to GitHub.
 | `GEMINI_API_KEY` | Google Gemini API key |
 | `GEMINI_MODEL` | Gemini model used by the AI workflow |
 | `JWT_SECRET_KEY` | Secret used to sign JWT access tokens |
-| `FRONTEND_URL` | Frontend origin used by backend CORS configuration |
-| `NEXT_PUBLIC_API_URL` | Backend API URL used by the Next.js frontend |
+| `FRONTEND_URL` | Frontend origin allowed by backend CORS |
+| `NEXT_PUBLIC_API_URL` | Backend API URL consumed by the frontend |
 
-Example:
+Example configuration:
 
 ```env
 DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<database>
@@ -483,39 +457,11 @@ FRONTEND_URL=http://localhost:3000
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
-For deployment, use the hosting provider's environment-variable configuration rather than committing secrets.
-
 ---
 
-## Authentication and Authorization
+## API Overview
 
-The application uses JWT-based authentication with role-based access control.
-
-```text
-Login
-  ↓
-Backend validates email/password
-  ↓
-bcrypt password verification
-  ↓
-JWT created with user identity, role and expiry
-  ↓
-Frontend stores access token
-  ↓
-Protected requests send Bearer token
-  ↓
-Backend validates JWT
-  ↓
-User data is scoped to authenticated user
-```
-
-Administrative routes require the ADMIN role.
-
----
-
-## API Details
-
-The backend exposes REST APIs through FastAPI.
+The FastAPI backend exposes the following application areas.
 
 ### Authentication
 
@@ -535,7 +481,7 @@ GET  /api/portfolio/performance
 POST /api/portfolio/upload
 ```
 
-### Insights / AI
+### Insights
 
 ```text
 GET /api/insights/
@@ -559,12 +505,14 @@ GET /api/analytics/performance
 GET /api/analytics/contribution
 ```
 
-### Audit / Operations
+### Audit
 
 ```text
 GET /api/audit/executions
 GET /api/audit/mcp-executions
 ```
+
+These endpoints are protected and intended for administrative/operations use.
 
 ### Admin
 
@@ -573,289 +521,149 @@ GET /api/admin/summary
 GET /api/admin/health
 ```
 
-### Interactive API Documentation
+All API routes should be exercised through the deployed application's authentication flow or the local Swagger UI rather than by exposing credentials in documentation.
 
-When the backend is running, FastAPI/OpenAPI provides Swagger UI at `/docs` and the OpenAPI schema at `/openapi.json`.
-
----
-
-## MCP Tools
-
-The MCP server provides controlled tools for the AI workflow, including:
-
-```text
-get_portfolio
-get_portfolio_summary
-get_portfolio_allocation
-get_portfolio_risk
-get_portfolio_performance
-get_portfolio_analytics
-get_market_data
-get_market_news
-get_portfolio_news
-```
-
-The purpose of MCP is to provide the AI workflow with explicit, structured capabilities rather than uncontrolled access to application data.
+For complete request/response details, see [`docs/api_documentation.md`](docs/api_documentation.md).
 
 ---
 
-## Sample Input and Output
+## Application Screenshots
 
-### Sample Portfolio Input
+The screenshots below show the implemented user and administrative product surfaces.
 
-```json
-{
-  "stock": "TCS",
-  "quantity": 10,
-  "avg_price": 3500,
-  "current_price": 3650,
-  "sector": "IT"
-}
-```
+### Authentication
 
-### Example Deterministic Output
+![Screenshot of the application login screen.](docs/screenshots/login.png)
 
-```json
-{
-  "investment": 35000,
-  "current_value": 36500,
-  "profit": 1500,
-  "return_percentage": 4.29
-}
-```
+### User Dashboard
 
-### Example AI Insight Structure
+![Screenshot of the investor dashboard showing portfolio-level KPIs and insights.](docs/screenshots/user-dashboard.png)
 
-```json
-{
-  "summary": "Portfolio performance is positive based on the supplied analytics.",
-  "key_drivers": [],
-  "risk_alerts": [],
-  "recommendation_category": "MONITOR",
-  "rationale": "Review allocation and portfolio concentration as conditions change.",
-  "confidence": "MEDIUM",
-  "freshness": "sample-data",
-  "disclaimer": true
-}
-```
+### Portfolio
 
-> The examples above illustrate the structure and should not be interpreted as live market information or financial advice.
+![Screenshot of the portfolio page showing holdings and portfolio metrics.](docs/screenshots/portfolio.png)
 
----
+### AI Insights
 
-## Evaluation Approach
+![Screenshot of the AI insights page showing explainable portfolio intelligence.](docs/screenshots/ai-insights.png)
 
-The project is evaluated against the major areas defined in the project specification:
+### User Settings
 
-| Evaluation Area | Implementation Evidence |
-|---|---|
-| Product understanding | Investor pain point, financial intelligence goal, regulated-product boundaries |
-| Product experience | Dashboard, portfolio, insights, recommendations, risk, operations and compliance surfaces |
-| Backend/API | FastAPI REST APIs, authentication, portfolio services, analytics, recommendations and audit records |
-| AI workflow | Portfolio Agent, MCP tools, Gemini, structured output and validation |
-| Analytics/data quality | Deterministic allocation, concentration, performance, risk, sector and contribution metrics |
-| Recommendation safety | Explainable signals, confidence, disclaimer and validation controls |
-| Observability | AI/MCP execution records, statuses, validation status, duration and admin health |
-| Deployment | Public frontend/backend deployment with configured environment variables |
-| Documentation | README, architecture, API, workflow, data and deployment documentation |
-| Demo | End-to-end portfolio → analytics → MCP → Gemini → validation → dashboard flow |
+![Screenshot of the user settings page.](docs/screenshots/user-settings.png)
 
-### Recommended Demo Flow
+### Admin Dashboard
 
-```text
-1. Login
-2. Dashboard
-3. Portfolio
-4. Portfolio Analytics
-5. AI Insights
-6. Recommendations
-7. Operations
-8. Compliance
-9. Explain AI + MCP + validation architecture
-```
+![Screenshot of the administrative dashboard showing operational metrics.](docs/screenshots/admin-dashboard.png)
+
+### Operations
+
+![Screenshot of the operations page showing AI and MCP execution monitoring.](docs/screenshots/operations.png)
+
+### Compliance
+
+![Screenshot of the compliance page showing governance and review information.](docs/screenshots/compliance.png)
+
+### Admin Settings
+
+![Screenshot of the administrative settings page.](docs/screenshots/admin-settings.png)
+
+GitHub supports relative image paths for images stored in the same repository, so these screenshots remain usable when the repository is cloned or viewed from another branch. citeturn0search0turn0search1
 
 ---
 
-## Screenshots
+## Engineering Highlights
 
-Screenshots should be stored in the repository under `docs/screenshots/` and referenced here.
+This project demonstrates practical full-stack engineering across several areas:
 
-Recommended screenshots for the final submission:
-
-1. Login page
-2. User Dashboard
-3. Portfolio page
-4. Analytics / Risk page
-5. AI Insights page
-6. Recommendation cards
-7. Admin Operations page
-8. Compliance page
-
-Example Markdown after adding the images:
-
-```markdown
-![User Dashboard](docs/screenshots/dashboard.png)
-![Portfolio Analytics](docs/screenshots/analytics.png)
-![AI Insights](docs/screenshots/ai-insights.png)
-![Admin Operations](docs/screenshots/operations.png)
-![Compliance](docs/screenshots/compliance.png)
-```
-
-> **Submission action:** add the actual application screenshots to `docs/screenshots/` before final submission. Do not use placeholder images in the final repository.
+- Designed and implemented a role-aware financial intelligence application rather than a standalone chatbot.
+- Built REST APIs with FastAPI and connected them to PostgreSQL through SQLAlchemy.
+- Implemented JWT authentication, bcrypt password hashing, role-based access control, and user-scoped data access.
+- Built deterministic financial analytics for portfolio performance, allocation, concentration, risk, contribution, sector exposure, volatility, drawdown, and benchmark comparison.
+- Integrated MCP as a controlled tool layer for portfolio, analytics, market, and news retrieval.
+- Implemented a Portfolio Agent workflow that assembles structured context for Gemini.
+- Added AI output validation for schema, grounding, risk consistency, and prohibited language.
+- Implemented explainable recommendation cards with confidence, supporting metrics, source context, and disclaimers.
+- Built separate investor and administrative experiences for product usage and operational visibility.
+- Deployed the frontend and backend as separate services on Render.
 
 ---
 
-## Live Demo
+## Project Contribution
 
-**Frontend:**
+The project work covered the full application lifecycle, including:
 
-https://zerodha-ai-frontend.onrender.com/
+- Product and system design.
+- Next.js frontend development.
+- FastAPI backend and REST API development.
+- PostgreSQL/SQLAlchemy data modeling.
+- Deterministic portfolio analytics.
+- MCP server and tool integration.
+- Gemini-based AI workflow integration.
+- AI validation and recommendation logic.
+- Authentication and authorization.
+- Investor and admin dashboard implementation.
+- Deployment configuration.
+- Technical documentation and demo preparation.
 
-**Backend API:**
-
-https://zerodha-ai-backend-1ftk.onrender.com
-
-**Backend Swagger UI:**
-
-https://zerodha-ai-backend-1ftk.onrender.com/docs
-
-The live deployment is intended for demonstration and evaluation. The application currently uses demonstration/sample financial data and is not connected to a live brokerage account.
-
----
-
-## Demo Script
-
-### 1. Introduction
-
-“This project is the Zerodha AI Financial Intelligence Platform. The goal is to transform portfolio data into understandable, explainable financial intelligence while keeping financial calculations deterministic and AI output controlled.”
-
-### 2. Dashboard
-
-“First, I log in and see the portfolio dashboard. It provides the main portfolio KPIs and a quick overview of performance.”
-
-### 3. Portfolio and Analytics
-
-“Next, the Portfolio page shows individual holdings, investment, current value and profit/loss. The analytics layer then calculates allocation, performance and risk metrics programmatically.”
-
-### 4. AI Workflow
-
-“When I request AI analysis, the Portfolio Agent obtains structured context through MCP tools. That context includes portfolio information and deterministic analytics, along with relevant market/news context. Gemini interprets that verified context and returns structured output.”
-
-### 5. Validation
-
-“Before the result reaches the user, the system validates the response for schema compliance, grounding, risk consistency and policy restrictions. This reduces the chance of unsupported financial claims.”
-
-### 6. Recommendations
-
-“The recommendation cards show explainable portfolio signals with supporting metrics, confidence and an informational disclaimer.”
-
-### 7. Operations and Compliance
-
-“Finally, the Operations and Compliance surfaces provide visibility into AI and MCP executions, validation status and system health. This demonstrates that the AI workflow is not treated as a black box.”
+The implementation intentionally keeps the architecture understandable and reviewable so that the AI layer can be demonstrated as a controlled financial-intelligence workflow rather than an opaque chatbot.
 
 ---
 
-## Known Limitations
+## Deployment
 
-This project is a financial intelligence prototype and has the following limitations:
+The current demonstration is deployed as separate frontend and backend services.
 
-- Market and news information is based on sample/demo data rather than live feeds.
-- There is no live Zerodha/Kite brokerage integration in the current version.
-- The system does not execute trades.
-- Advanced portfolio risk models are outside the current scope.
-- The AI workflow is controlled and limited rather than fully autonomous.
-- Recommendation logic is intended for informational portfolio review and not personalized financial advice.
-- The current deployment is designed for demonstration rather than production brokerage operations.
-- Background job queues, large-scale caching, advanced real-time alerting and scalable multi-agent orchestration are future extensions.
+- **Live application:** https://zerodha-ai-frontend.onrender.com/
+- **Backend API:** https://zerodha-ai-backend-1ftk.onrender.com
+- **Swagger UI:** https://zerodha-ai-backend-1ftk.onrender.com/docs
 
----
-
-## Future Scope
-
-Potential extensions include:
-
-- Live market data integration
-- Zerodha/Kite Connect integration
-- Real-time portfolio refresh
-- Advanced risk models
-- Personalized risk profiles
-- Real-time alerts
-- More AI agents for specialized workflows
-- Vector-based financial knowledge retrieval
-- Scheduled portfolio intelligence jobs
-- Advanced adoption and model-quality analytics
-- Production-grade queueing and horizontal scaling
+Deployment configuration is environment-driven, with secrets kept outside the repository.
 
 ---
 
 ## Documentation
 
-Additional documentation is maintained under `docs/`.
+Additional project documentation is available under [`docs/`](docs/):
 
-Recommended documentation areas:
+- [`docs/architecture.md`](docs/architecture.md) — system architecture and component responsibilities.
+- [`docs/api_documentation.md`](docs/api_documentation.md) — REST API reference and endpoint behavior.
+- [`docs/mcp.md`](docs/mcp.md) — MCP tools, schemas, configuration, and startup information.
+- [`docs/demo_script.md`](docs/demo_script.md) — end-to-end demonstration flow.
 
-```text
-docs/
-├── README.md
-├── architecture.md
-├── api_documentation.md
-├── demo_script.md
-└── screenshots/
-```
+The repository also contains sample portfolio, market, and news data under [`data/`](data/).
 
 ---
 
-## Team Contribution
+## Current Scope and Limitations
 
-The project covers the following contribution areas:
+The current version intentionally focuses on portfolio intelligence rather than brokerage execution.
 
-- Product understanding and business framing
-- Frontend dashboard development
-- FastAPI backend and REST API development
-- PostgreSQL and SQLAlchemy data layer
-- Portfolio analytics implementation
-- MCP server and tool integration
-- Gemini AI workflow integration
-- AI output validation and governance
-- Authentication and role-based access control
-- Operations and compliance dashboard implementation
-- Testing and deployment
-- Documentation and presentation
+- Market and news inputs use sample/project data.
+- No live order placement is performed.
+- No autonomous trading decisions are executed.
+- Advanced real-time risk engines are outside the current scope.
+- A production deployment would require additional security hardening, monitoring, compliance review, load testing, and live-data reliability controls.
 
-For a team submission, add the exact member names and ownership beside each area before final submission.
+These boundaries keep the prototype focused on the core problem: **turning structured portfolio data into explainable, validated financial intelligence.**
 
 ---
 
-## Security Notes
+## Future Enhancements
 
-- Never commit `.env` files or API keys.
-- Use `.env.example` only as a configuration template.
-- Use strong production JWT secrets.
-- Keep Gemini/API credentials on the backend.
-- Use HTTPS for deployed environments.
-- Review GitHub secret scanning and dependency/security alerts before submission.
+Potential extensions include:
 
----
-
-## Project Status
-
-**Status: Demonstration-ready full-stack prototype**
-
-The core product flow is implemented across the frontend, backend, analytics, MCP, Gemini AI, validation, recommendations, authentication, operations and compliance surfaces.
-
-Before final submission, complete the repository-level submission checklist:
-
-- [ ] Protect audit endpoints with appropriate authentication/authorization.
-- [ ] Add final screenshots under `docs/screenshots/`.
-- [ ] Add testing evidence / tests.
-- [ ] Complete MCP tooling documentation.
-- [ ] Complete API and architecture documentation.
-- [ ] Add final team member contribution details.
-- [ ] Verify the deployed URLs.
-- [ ] Upload the demo video and add the share link.
+- Live market-data integrations.
+- Broker/brokerage API integrations.
+- Advanced risk models and stress testing.
+- Personalized risk profiles.
+- Real-time portfolio alerts.
+- Expanded market and news retrieval.
+- Stronger model evaluation and monitoring.
+- Human-in-the-loop review workflows for policy-sensitive recommendations.
+- Production-scale observability and performance monitoring.
 
 ---
 
-## License
+## Disclaimer
 
-This project is an educational/prototype implementation created for project evaluation and demonstration purposes.
+This project is an educational/prototype financial-intelligence application. Its analytics and AI-generated outputs are based on the supplied project data and are intended for informational purposes only. They do not constitute investment, financial, tax, or legal advice, and the application does not execute trades.
