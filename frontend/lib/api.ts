@@ -7,12 +7,7 @@ interface PortfolioUploadResponse {
   holdings_added: number;
   stocks_added: string[];
 }
-/*
- * Get the JWT access token stored during login.
- *
- * localStorage is only available in the browser,
- * so we check for window before accessing it.
- */
+
 function getAccessToken(): string | null {
   if (typeof window === "undefined") {
     return null;
@@ -21,12 +16,6 @@ function getAccessToken(): string | null {
   return localStorage.getItem("access_token");
 }
 
-
-/*
- * Common authenticated request helper.
- *
- * Every protected backend request goes through this function.
- */
 async function authenticatedFetch(
   endpoint: string,
   options: RequestInit = {}
@@ -39,31 +28,19 @@ async function authenticatedFetch(
     );
   }
 
-  const headers = new Headers(
-    options.headers
-  );
+  const headers = new Headers(options.headers);
 
   headers.set(
     "Authorization",
     `Bearer ${token}`
   );
 
-  /*
-   * Only set JSON Content-Type when a request body exists
-   * AND the body is not FormData.
-   *
-   * For FormData uploads, the browser must automatically
-   * set the multipart/form-data boundary.
-   */
   if (
     options.body &&
     !(options.body instanceof FormData) &&
     !headers.has("Content-Type")
   ) {
-    headers.set(
-      "Content-Type",
-      "application/json"
-    );
+    headers.set("Content-Type", "application/json");
   }
 
   const response = await fetch(
@@ -74,16 +51,9 @@ async function authenticatedFetch(
     }
   );
 
-  /*
-   * If the token is expired or invalid,
-   * remove the stored authentication data.
-   */
   if (response.status === 401) {
     if (typeof window !== "undefined") {
-      localStorage.removeItem(
-        "access_token"
-      );
-
+      localStorage.removeItem("access_token");
       localStorage.removeItem("user");
     }
 
@@ -101,113 +71,79 @@ async function authenticatedFetch(
    ========================================================= */
 
 export async function getPortfolio() {
-  const response =
-    await authenticatedFetch(
-      "/api/portfolio/"
-    );
+  const response = await authenticatedFetch(
+    "/api/portfolio/"
+  );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to fetch portfolio data"
-    );
+    throw new Error("Failed to fetch portfolio data");
   }
 
   return response.json();
 }
-
 
 export async function getPortfolioSummary() {
-  const response =
-    await authenticatedFetch(
-      "/api/portfolio/summary"
-    );
+  const response = await authenticatedFetch(
+    "/api/portfolio/summary"
+  );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to fetch portfolio summary"
-    );
+    throw new Error("Failed to fetch portfolio summary");
   }
 
   return response.json();
 }
-
 
 export async function getPortfolioAllocation() {
-  const response =
-    await authenticatedFetch(
-      "/api/portfolio/allocation"
-    );
+  const response = await authenticatedFetch(
+    "/api/portfolio/allocation"
+  );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to fetch portfolio allocation"
-    );
+    throw new Error("Failed to fetch portfolio allocation");
   }
 
   return response.json();
 }
-
 
 export async function getPortfolioRisk() {
-  const response =
-    await authenticatedFetch(
-      "/api/portfolio/risk"
-    );
+  const response = await authenticatedFetch(
+    "/api/portfolio/risk"
+  );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to fetch portfolio risk"
-    );
+    throw new Error("Failed to fetch portfolio risk");
   }
 
   return response.json();
 }
-
 
 export async function getPortfolioPerformance() {
-  const response =
-    await authenticatedFetch(
-      "/api/portfolio/performance"
-    );
+  const response = await authenticatedFetch(
+    "/api/portfolio/performance"
+  );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to fetch portfolio performance"
-    );
+    throw new Error("Failed to fetch portfolio performance");
   }
 
   return response.json();
 }
 
-
-/*
- * Upload portfolio CSV.
- *
- * The backend is responsible for:
- * - validating the CSV
- * - checking duplicate holdings
- * - associating holdings with the authenticated user
- * - adding the holdings to the existing portfolio
- */
 export async function uploadPortfolio(
   file: File
 ): Promise<PortfolioUploadResponse> {
   const formData = new FormData();
+  formData.append("file", file);
 
-  formData.append(
-    "file",
-    file
+  const response = await authenticatedFetch(
+    "/api/portfolio/upload",
+    {
+      method: "POST",
+      body: formData,
+      cache: "no-store",
+    }
   );
-
-  const response =
-    await authenticatedFetch(
-      "/api/portfolio/upload",
-      {
-        method: "POST",
-        body: formData,
-        cache: "no-store",
-      }
-    );
 
   let data: unknown = null;
 
@@ -218,9 +154,7 @@ export async function uploadPortfolio(
   }
 
   if (!response.ok) {
-    let errorMessage =
-      "Failed to upload portfolio.";
-
+    let errorMessage = "Failed to upload portfolio.";
     let detail: unknown = undefined;
 
     if (
@@ -228,11 +162,7 @@ export async function uploadPortfolio(
       typeof data === "object" &&
       "detail" in data
     ) {
-      detail = (
-        data as {
-          detail?: unknown;
-        }
-      ).detail;
+      detail = (data as { detail?: unknown }).detail;
     }
 
     if (
@@ -240,26 +170,19 @@ export async function uploadPortfolio(
       typeof detail === "object" &&
       "message" in detail
     ) {
-      const message = (
-        detail as {
-          message?: unknown;
-        }
-      ).message;
+      const message = (detail as { message?: unknown }).message;
 
       if (typeof message === "string") {
         errorMessage = message;
       }
-    } else if (
-      typeof detail === "string"
-    ) {
+    } else if (typeof detail === "string") {
       errorMessage = detail;
     }
 
-    const error =
-      new Error(errorMessage) as Error & {
-        status?: number;
-        detail?: unknown;
-      };
+    const error = new Error(errorMessage) as Error & {
+      status?: number;
+      detail?: unknown;
+    };
 
     error.status = response.status;
     error.detail = detail;
@@ -276,37 +199,26 @@ export async function uploadPortfolio(
    ========================================================= */
 
 export async function getInsights() {
-  const response =
-    await authenticatedFetch(
-      "/api/insights/",
-      {
-        cache: "no-store",
-      }
-    );
+  const response = await authenticatedFetch(
+    "/api/insights/",
+    { cache: "no-store" }
+  );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to fetch AI insights"
-    );
+    throw new Error("Failed to fetch AI insights");
   }
 
   return response.json();
 }
 
-
 export async function getAIAnalysis() {
-  const response =
-    await authenticatedFetch(
-      "/api/insights/ai",
-      {
-        cache: "no-store",
-      }
-    );
+  const response = await authenticatedFetch(
+    "/api/insights/ai",
+    { cache: "no-store" }
+  );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to fetch AI analysis"
-    );
+    throw new Error("Failed to fetch AI analysis");
   }
 
   return response.json();
@@ -318,38 +230,54 @@ export async function getAIAnalysis() {
    ========================================================= */
 
 export async function getRecommendations() {
-  const response =
-    await authenticatedFetch(
-      "/api/recommendations",
-      {
-        cache: "no-store",
-      }
-    );
+  const response = await authenticatedFetch(
+    "/api/recommendations",
+    { cache: "no-store" }
+  );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to fetch recommendations"
-    );
+    throw new Error("Failed to fetch recommendations");
   }
 
   return response.json();
 }
 
-
 export async function generateRecommendations() {
-  const response =
-    await authenticatedFetch(
-      "/api/recommendations/generate",
-      {
-        method: "POST",
-        cache: "no-store",
-      }
-    );
+  const response = await authenticatedFetch(
+    "/api/recommendations/generate",
+    {
+      method: "POST",
+      cache: "no-store",
+    }
+  );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to generate recommendations"
-    );
+    throw new Error("Failed to generate recommendations");
+  }
+
+  return response.json();
+}
+
+export async function submitRecommendationFeedback(
+  generationId: string,
+  recommendationType: string,
+  rating: "HELPFUL" | "NOT_HELPFUL"
+) {
+  const response = await authenticatedFetch(
+    "/api/feedback",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        generation_id: generationId,
+        recommendation_type: recommendationType,
+        rating,
+      }),
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to submit feedback");
   }
 
   return response.json();
@@ -361,45 +289,30 @@ export async function generateRecommendations() {
    ========================================================= */
 
 export async function getAIExecutions() {
-  const response =
-    await authenticatedFetch(
-      "/api/audit/executions",
-      {
-        cache: "no-store",
-      }
-    );
+  const response = await authenticatedFetch(
+    "/api/audit/executions",
+    { cache: "no-store" }
+  );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to fetch AI execution records"
-    );
+    throw new Error("Failed to fetch AI execution records");
   }
 
-  const data =
-    await response.json();
-
+  const data = await response.json();
   return data.value ?? data;
 }
 
-
 export async function getMCPExecutions() {
-  const response =
-    await authenticatedFetch(
-      "/api/audit/mcp-executions",
-      {
-        cache: "no-store",
-      }
-    );
+  const response = await authenticatedFetch(
+    "/api/audit/mcp-executions",
+    { cache: "no-store" }
+  );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to fetch MCP executions"
-    );
+    throw new Error("Failed to fetch MCP executions");
   }
 
-  const data =
-    await response.json();
-
+  const data = await response.json();
   return data.value ?? data;
 }
 
@@ -409,37 +322,26 @@ export async function getMCPExecutions() {
    ========================================================= */
 
 export async function getAdminSummary() {
-  const response =
-    await authenticatedFetch(
-      "/api/admin/summary",
-      {
-        cache: "no-store",
-      }
-    );
+  const response = await authenticatedFetch(
+    "/api/admin/summary",
+    { cache: "no-store" }
+  );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to fetch admin summary"
-    );
+    throw new Error("Failed to fetch admin summary");
   }
 
   return response.json();
 }
 
-
 export async function getSystemHealth() {
-  const response =
-    await authenticatedFetch(
-      "/api/admin/health",
-      {
-        cache: "no-store",
-      }
-    );
+  const response = await authenticatedFetch(
+    "/api/admin/health",
+    { cache: "no-store" }
+  );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to fetch system health"
-    );
+    throw new Error("Failed to fetch system health");
   }
 
   return response.json();
