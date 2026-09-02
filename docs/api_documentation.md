@@ -89,9 +89,11 @@ The workflow includes portfolio/analytics context retrieval, MCP tool usage, Gem
 
 ### `GET /api/recommendations`
 
-Returns recommendation records belonging to the authenticated user.
+Returns the latest recommendation generation belonging to the authenticated user.
 
 **Authentication:** Required.
+
+Each recommendation includes its `generation_id`, allowing user feedback to be associated with the exact generated recommendation set.
 
 ### `POST /api/recommendations/generate`
 
@@ -99,7 +101,40 @@ Generates recommendation signals from portfolio analytics and stores the resulti
 
 **Authentication:** Required.
 
-Recommendations include structured fields such as type, title, rationale, supporting metrics, confidence, data source, and disclaimer.
+Recommendations include structured fields such as generation ID, type, title, rationale, supporting metrics, confidence, data source, and disclaimer.
+
+## Recommendation Feedback
+
+### `POST /api/feedback`
+
+Stores whether an authenticated user found a recommendation useful.
+
+**Authentication:** Required.
+
+**Request**
+
+```json
+{
+  "generation_id": "<recommendation-generation-id>",
+  "recommendation_type": "concentration",
+  "rating": "HELPFUL"
+}
+```
+
+Supported ratings:
+
+```text
+HELPFUL
+NOT_HELPFUL
+```
+
+### `GET /api/feedback`
+
+Returns feedback submitted by the authenticated user.
+
+**Authentication:** Required.
+
+Feedback is user-scoped and does not expose another user's feedback through the normal API.
 
 ## Analytics APIs
 
@@ -168,7 +203,7 @@ The API uses standard HTTP status codes for authentication, authorization, valid
 ## API Design Principles
 
 - Authentication is enforced at the backend boundary.
-- Portfolio and recommendation data is scoped to the authenticated user.
+- Portfolio, recommendation, and feedback data is scoped to the authenticated user.
 - Administrative telemetry is restricted to ADMIN users.
 - Financial calculations are performed deterministically.
 - AI-generated output passes application-level validation before presentation.
