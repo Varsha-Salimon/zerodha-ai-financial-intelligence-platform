@@ -567,7 +567,6 @@ The screenshots below show the implemented user and administrative product surfa
 
 ![Screenshot of the administrative settings page.](docs/screenshots/admin-settings.png)
 
-GitHub supports relative image paths for images stored in the same repository, so these screenshots remain usable when the repository is cloned or viewed from another branch. citeturn0search0turn0search1
 
 ---
 
