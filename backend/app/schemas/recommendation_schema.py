@@ -3,6 +3,7 @@ from typing import Any
 
 
 class Recommendation(BaseModel):
+    generation_id: str
     type: str
     title: str
     recommendation: str
