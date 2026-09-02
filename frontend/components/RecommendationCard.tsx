@@ -1,4 +1,11 @@
+"use client";
+
+import { useState } from "react";
+
+import { submitRecommendationFeedback } from "@/lib/api";
+
 interface Recommendation {
+  generation_id: string;
   type: string;
   title: string;
   recommendation: string;
@@ -61,21 +68,47 @@ export default function RecommendationCard({
   recommendation,
 }: RecommendationCardProps) {
   const style = getTypeStyle(recommendation.type);
+  const [feedback, setFeedback] = useState<
+    "HELPFUL" | "NOT_HELPFUL" | null
+  >(null);
+  const [submittingFeedback, setSubmittingFeedback] =
+    useState(false);
+
+  const handleFeedback = async (
+    rating: "HELPFUL" | "NOT_HELPFUL"
+  ) => {
+    if (submittingFeedback || feedback) {
+      return;
+    }
+
+    try {
+      setSubmittingFeedback(true);
+
+      await submitRecommendationFeedback(
+        recommendation.generation_id,
+        recommendation.type,
+        rating
+      );
+
+      setFeedback(rating);
+    } catch {
+      // Keep the card usable if feedback submission fails.
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
 
   return (
     <div
       className={`group min-w-0 rounded-2xl border ${style.border} bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md`}
     >
-      {/* Header */}
       <div className="flex items-start gap-3">
-        {/* Icon */}
         <div
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${style.iconBg} ${style.iconText} text-lg font-bold`}
         >
           {style.icon}
         </div>
 
-        {/* Title + confidence */}
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -90,7 +123,6 @@ export default function RecommendationCard({
               </h3>
             </div>
 
-            {/* Confidence */}
             <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-medium text-blue-700">
               {recommendation.confidence}
             </span>
@@ -98,7 +130,6 @@ export default function RecommendationCard({
         </div>
       </div>
 
-      {/* Recommendation */}
       <div className="mt-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           Recommendation
@@ -109,7 +140,6 @@ export default function RecommendationCard({
         </p>
       </div>
 
-      {/* Why this was identified */}
       <div className="mt-5 rounded-xl bg-slate-50 p-4">
         <div className="flex items-center gap-2">
           <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
@@ -124,7 +154,6 @@ export default function RecommendationCard({
         </p>
       </div>
 
-      {/* Data source */}
       <div className="mt-5 flex min-w-0 items-start justify-between gap-3 border-t border-slate-100 pt-4">
         <p className="shrink-0 text-xs text-slate-400">
           Based on
@@ -133,6 +162,46 @@ export default function RecommendationCard({
         <p className="min-w-0 break-words text-right text-xs font-medium text-slate-500">
           {recommendation.data_source}
         </p>
+      </div>
+
+      <div className="mt-5 border-t border-slate-100 pt-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          Was this recommendation useful?
+        </p>
+
+        <div className="mt-3 flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleFeedback("HELPFUL")}
+            disabled={submittingFeedback || feedback !== null}
+            className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
+              feedback === "HELPFUL"
+                ? "border-green-200 bg-green-50 text-green-700"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            } disabled:cursor-not-allowed disabled:opacity-60`}
+          >
+            {feedback === "HELPFUL" ? "✓ Helpful" : "Helpful"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleFeedback("NOT_HELPFUL")}
+            disabled={submittingFeedback || feedback !== null}
+            className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
+              feedback === "NOT_HELPFUL"
+                ? "border-amber-200 bg-amber-50 text-amber-700"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            } disabled:cursor-not-allowed disabled:opacity-60`}
+          >
+            {feedback === "NOT_HELPFUL" ? "✓ Not helpful" : "Not helpful"}
+          </button>
+        </div>
+
+        {feedback && (
+          <p className="mt-2 text-xs text-slate-400">
+            Thanks for your feedback.
+          </p>
+        )}
       </div>
     </div>
   );
