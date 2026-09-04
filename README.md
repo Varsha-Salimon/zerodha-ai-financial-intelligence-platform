@@ -613,10 +613,29 @@ The implementation intentionally keeps the architecture understandable and revie
 The current demonstration is deployed as separate frontend and backend services.
 
 - **Live application:** https://zerodha-ai-frontend.onrender.com/
+  
 - **Backend API:** https://zerodha-ai-backend-1ftk.onrender.com
 - **Swagger UI:** https://zerodha-ai-backend-1ftk.onrender.com/docs
 
+- Test USER account
+  Email: varsha@demo.com
+  Password: varsha123
+  
+- Test ADMIN account
+  Email: admin@demo.com
+  Password: admin123
+
 Deployment configuration is environment-driven, with secrets kept outside the repository.
+
+### Deployment Note
+
+This application is deployed on Render's free tier. After a period of
+inactivity, the backend may take a short time to wake up.
+
+If the application does not respond immediately, please open the
+**[Swagger UI](https://zerodha-ai-backend-1ftk.onrender.com/docs)**,
+wait a few seconds for the backend to initialize, and then attempt to
+log in to the frontend.
 
 ---
 
